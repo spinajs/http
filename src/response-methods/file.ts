@@ -1,8 +1,8 @@
-import { IOFail } from '@spinajs/exceptions';
+import { ResourceNotFound } from '@spinajs/exceptions';
 import * as express from 'express';
 import * as fs from 'fs';
 import * as _ from 'lodash';
-import * as mime from 'mime';
+import { getType } from 'mime';
 import { Response, ResponseFunction } from '../responses';
 
 
@@ -22,12 +22,12 @@ export class FileResponse extends Response {
   constructor(path: string, filename: string, mimeType?: string) {
     super(null);
 
-    this.mimeType = mimeType ? mimeType : mime.getType(filename);
+    this.mimeType = mimeType ? mimeType : getType(filename);
     this.filename = filename;
     this.path = path;
 
     if (!fs.existsSync(path)) {
-      throw new IOFail(`File ${path} not exists`);
+      throw new ResourceNotFound(`File ${path} not exists`);
     }
   }
 

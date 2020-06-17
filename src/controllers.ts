@@ -1,4 +1,4 @@
-import { IController, IControllerDescriptor,IPolicyDescriptor, BaseMiddleware, ParameterType, IRoute, RouteCallback, IMiddlewareDescriptor, BasePolicy } from './interfaces';
+import { IController, IControllerDescriptor, IPolicyDescriptor, BaseMiddleware, ParameterType, IRoute, RouteCallback, IMiddlewareDescriptor, BasePolicy } from './interfaces';
 import { AsyncModule, IContainer, Autoinject, DI } from "@spinajs/di";
 import * as express from "express";
 import { CONTROLLED_DESCRIPTOR_SYMBOL } from './decorators';
@@ -6,6 +6,7 @@ import { ValidationFailed, UnexpectedServerError, Forbidden } from "@spinajs/exc
 import { ClassInfo, TypescriptCompiler, ResolveFromFiles } from "@spinajs/reflection";
 import { HttpServer } from './server';
 import { Logger, Log } from '@spinajs/log';
+import { IncomingForm, Files, Fields } from "formidable";
 
 // tslint:disable-next-line: no-var-requires
 import Ajv = require("ajv");
@@ -124,6 +125,7 @@ export abstract class BaseController extends AsyncModule implements IController 
         async function _extractRouteArgs(route: IRoute, req: express.Request) {
 
             const args = new Array<any>(route.Parameters.size);
+            let multipartsCache: { fields: Fields, files: Files } = null;
 
             for (const [, param] of route.Parameters) {
                 let source = null;
@@ -138,14 +140,25 @@ export abstract class BaseController extends AsyncModule implements IController 
                     case ParameterType.FromQuery:
                         source = req.query;
                         break;
+                    case ParameterType.FromFile:
+                        source = await _extractMultipart(param.Options, req, param.Type);
+                        break;
+                    case ParameterType.FromForm:
+                        source = await _extractMultipart(param.Options, req, param.Type);
+                        break;
                 }
 
                 // if parameter have name defined load it up
                 if (param.Name) {
-                    // query params are always sent as strings, even numbers,
-                    // we must try to parse them as integers first
-                    if (param.RuntimeType.name.toLowerCase() === 'number') {
+
+                    // form fields goes to one
+                    if (param.Type === ParameterType.FromForm) {
+                        args[param.Index] = source;
+                    } else if (param.RuntimeType.name.toLowerCase() === 'number') {
+                        // query params are always sent as strings, even numbers,
+                        // we must try to parse them as integers first
                         args[param.Index] = Number(source[param.Name]);
+
                     } else {
                         args[param.Index] = source[param.Name];
                     }
@@ -163,13 +176,46 @@ export abstract class BaseController extends AsyncModule implements IController 
 
                     const result = validator.validate(param.Schema, args[param.Index]);
                     if (!result) {
-                        throw new ValidationFailed(`parameter validation error`, validator.errors);
+                        throw new ValidationFailed(`parameter validation error`, {
+                            param: param.Name,
+                            errors: validator.errors
+                        });
                     }
                 }
             }
 
             return args;
+
+            async function _extractMultipart(options: any, req: express.Request, type: ParameterType) {
+
+                if (!multipartsCache) {
+                    multipartsCache = await _parse();
+                }
+
+                switch (type) {
+                    case ParameterType.FromFile: return multipartsCache.files;
+                    case ParameterType.FromForm: return multipartsCache.fields;
+                }
+
+                function _parse(): Promise<{ fields: Fields, files: Files }> {
+                    const form = new IncomingForm(options);
+
+                    return new Promise((res, rej) => {
+                        form.parse(req, (err: any, fields: Fields, files: Files) => {
+                            if (err) {
+                                rej(err);
+                                return;
+                            }
+
+                            res({ fields, files });
+                        });
+                    })
+                }
+
+            }
         }
+
+
     }
 }
 
@@ -220,7 +266,7 @@ export class Controllers extends AsyncModule {
                     for (const [index, rParam] of route.Parameters) {
                         const parameterInfo = member.parameters[index];
                         if (parameterInfo) {
-                            rParam.Name = parameterInfo.name.getText();
+                            rParam.Name = (parameterInfo.name as any).text;
                         }
                     }
                 } else {

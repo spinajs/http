@@ -16,7 +16,7 @@ export class Redirect extends Response {
     this.url = url;
   }
 
-  public async execute(_req: express.Request, res: express.Response): Promise<ResponseFunction> {
+  public async execute(_req: express.Request, _res: express.Response): Promise<ResponseFunction> {
     return (_req: express.Request, res: express.Response) => {
       res.redirect(this.url);
     };

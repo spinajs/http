@@ -1,4 +1,4 @@
-import { BaseController, Get, Post, Head, Patch, Del, Put, File, Ok } from "../../src";
+import { BaseController, Get, Post, Head, Patch, Del, Put, Ok } from "../../src";
 
 
 export class Test2 extends BaseController {
@@ -26,11 +26,6 @@ export class Test2 extends BaseController {
 
     @Del()
     public testDel() {
-        return new Ok();
-    }
-
-    @File()
-    public testFile() {
         return new Ok();
     }
 

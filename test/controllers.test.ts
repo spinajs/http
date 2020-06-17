@@ -15,6 +15,8 @@ import sinon from 'sinon';
 import chaiAsPromised from 'chai-as-promised';
 import { SampleMiddleware2 } from './middlewares/SampleMiddleware2';
 import { SamplePolicy2 } from './policies/SamplePolicy2';
+import { Test } from './controllers/Test';
+import * as fs from "fs";
 
 chai.use(chaiHttp);
 chai.use(chaiAsPromised);
@@ -86,9 +88,6 @@ describe("http & controller tests", () => {
         response = await req().del("test2/testDel");
         expect(response).to.have.status(200);
 
-        response = await req().get("test2/testFile");
-        expect(response).to.have.status(200);
-
         response = await req().put("test2/testPut");
         expect(response).to.have.status(200);
     });
@@ -107,9 +106,6 @@ describe("http & controller tests", () => {
         expect(response).to.have.status(200);
 
         response = await req().del("sample-controller/v1/testDel");
-        expect(response).to.have.status(200);
-
-        response = await req().get("sample-controller/v1/testFile");
         expect(response).to.have.status(200);
 
         response = await req().put("sample-controller/v1/testPut");
@@ -196,16 +192,93 @@ describe("http & controller tests", () => {
     });
 
     it("intl in view should work", async () => {
-        let response = await req().get("sample-controller/v1/testViewIntl").query({lang: "pl"});
+        let response = await req().get("sample-controller/v1/testViewIntl").query({ lang: "pl" });
         expect(response).to.have.status(200);
         expect(response.text).to.eq('<html><head><title> Sample view</title></head><body>   <p>sample view</p><p>witaj świecie</p></body></html>');
 
-        response = await req().get("sample-controller/v1/testViewIntl").query({lang: "en"});
+        response = await req().get("sample-controller/v1/testViewIntl").query({ lang: "en" });
         expect(response).to.have.status(200);
         expect(response.text).to.eq('<html><head><title> Sample view</title></head><body>   <p>sample view</p><p>hello world</p></body></html>');
 
         response = await req().get("sample-controller/v1/testViewIntl");
         expect(response).to.have.status(200);
         expect(response.text).to.eq('<html><head><title> Sample view</title></head><body>   <p>sample view</p><p>witaj świecie</p></body></html>');
+    });
+
+    it("should pass query params", async () => {
+        const response = await req().get("sample-controller/v1/testQueryParam").query({ first: "pl", second: "hello world" });
+        expect(response).to.have.status(200);
+
+        expect(Test.QueryParams).to.include({
+            first: "pl",
+            second: "hello world"
+        });
+    });
+
+    it("should pass post params", async () => {
+        const response = await req().post("sample-controller/v1/testPostParam").send({ first: "pl", second: "hello world" });
+        expect(response).to.have.status(200);
+
+        expect(Test.BodyBarams).to.include({
+            first: "pl",
+            second: "hello world"
+        });
+    });
+
+    it("should pass form params", async () => {
+        const response = await req().get("sample-controller/v1/testParamsParams/12345")
+        expect(response).to.have.status(200);
+
+        expect(Test.ParamsParams).to.include({
+            id: 12345
+        });
+    });
+
+    it("should pass form params", async () => {
+        const response = await req().post("sample-controller/v1/testForm")
+            .field("hello", "world")
+            .field("foo", "bar");
+
+        expect(response).to.have.status(200);
+        expect(Test.ParamsForm).to.include({
+            hello: "world",
+            foo: "bar"
+        });
+
+    });
+
+    it("should pass file params", async () => {
+        const response = await req().post("sample-controller/v1/testMultipartForm").attach('index', fs.readFileSync(normalize(join(resolve(__dirname), "./public/index.html"))), 'index.html')
+            .field("hello", "world")
+            .field("foo", "bar");
+
+        expect(response).to.have.status(200);
+        expect(Test.ParamsMultiForm).to.include({
+            hello: "world",
+            foo: "bar"
+        });
+        expect(Test.ParamsFile).to.be.not.undefined;
+        expect(Test.ParamsFile).to.be.not.null;
+    });
+
+    it("should response with file", async () => {
+        const response = await req().get("sample-controller/v1/testFileResponse");
+        expect(response).to.have.status(200);
+    });
+
+    it("should validate params schema simple", async () => {
+        let response = await req().get("sample-controller/v1/testValidation").query({ id: 1 });
+        expect(response).to.have.status(200);
+
+        response = await req().get("sample-controller/v1/testValidation").query({ id: "sss" });
+        expect(response).to.have.status(400);
+    });
+
+    it("should validate body", async () => {
+        let response = await req().post("sample-controller/v1/testValidation2").send({ data: { id: 1 } });
+        expect(response).to.have.status(200);
+
+        response = await req().post("sample-controller/v1/testValidation2").send({ data: { id: "ddd" } });
+        expect(response).to.have.status(400);
     });
 });

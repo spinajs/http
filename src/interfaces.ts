@@ -42,22 +42,6 @@ export interface IHttpStaticFileConfiguration {
 }
 
 /**
- * Options for receiving file
- */
-export interface IFileOptions {
-  /**
-   * Max size in bytes that is allowed to receive
-   */
-  MaxSize: number;
-
-  /**
-   * Where to copy file
-   */
-  BasePath: string;
-}
-
-
-/**
  * HTTP response statuses
  */
 export enum HTTP_STATUS_CODE {
@@ -129,7 +113,6 @@ export enum HTTP_STATUS_CODE {
   NOT_IMPLEMENTED = 501,
 }
 
-
 /**
  * Avaible route types, match HTTP methods
  */
@@ -191,6 +174,66 @@ export enum ParameterType {
    * From url params eg: `/:id`
    */
   FromParams,
+
+  /**
+   * From form file field
+   */
+  FromFile,
+
+  /**
+   * From form  
+   */
+  FromForm,
+
+  /**
+   * From model object
+   */
+  FromModel,
+}
+
+export interface IUploadOptions {
+
+  /**
+   * default 1000; limit the number of fields that the Querystring parser will decode, set 0 for unlimited
+   */
+  maxFields?: number;
+
+  /**
+   *  default 20 * 1024 * 1024 (20mb); limit the amount of memory all fields together (except files) can allocate in bytes.
+   */
+  maxFieldsSize?: number;
+
+  /**
+   *  default 200 * 1024 * 1024 (200mb); limit the size of uploaded file.
+   */
+  maxFileSize?: number;
+
+  /**
+   * default false; to include the extensions of the original files or not
+   */
+  keepExtensions?: boolean;
+
+  /**
+   * default 'utf-8'; sets encoding for incoming form fields,
+   */
+  encoding?: string;
+
+  /**
+   * default false; include checksums calculated for incoming files, set this to some hash algorithm, see crypto.createHash for available algorithms
+   */
+  hash?: false;
+
+  /**
+   * default os.tmpdir(); the directory for placing file uploads in. You can move them later by using fs.rename()
+   */
+  uploadDir?: string;
+
+  /**
+   * default false; when you call the .parse method, the files argument (of the callback) will contain arrays of files for inputs which submit multiple files using the HTML5 multiple attribute. Also, the fields argument will contain arrays of values for fields that have names ending with '[]'.
+   */
+  multiples?: boolean;
+
+  enabledPlugins?: string[];
 }
 
 /**
@@ -211,6 +254,11 @@ export interface IRouteParameter {
    * Schema for validation
    */
   Schema?: any;
+
+  /**
+   * Additional options
+   */
+  Options?: any;
 
   /**
    * Parameter runtime type eg. number or class

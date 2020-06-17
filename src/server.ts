@@ -107,7 +107,9 @@ export class HttpServer extends AsyncModule {
             }
 
             res.locals.response.execute(req, res).then((callback: ResponseFunction) => {
-                callback(req, res);
+                if(callback){
+                    callback(req, res);
+                }
             });
         });
     }

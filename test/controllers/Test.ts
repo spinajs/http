@@ -1,10 +1,19 @@
-import { PugResponse } from './../../src';
+import { PugResponse, Query, Body, Param, Form, Upload, FileResponse } from './../../src';
 import { ServerError } from './../../src';
-import { BaseController, BasePath, Get, Post, Head, Patch, Del, Put, File, Ok } from "../../src";
-
+import { BaseController, BasePath, Get, Post, Head, Patch, Del, Put, Ok } from "../../src";
+import { join, normalize, resolve } from 'path';
+import { File } from "formidable";
 
 @BasePath("sample-controller/v1")
 export class Test extends BaseController {
+    public static QueryParams: any;
+    public static BodyBarams: any;
+    public static ParamsParams: any;
+
+    public static ParamsMultiForm: any;
+    public static ParamsForm: any;
+    public static ParamsFile: any;
+
 
     @Get()
     public testGet() {
@@ -32,11 +41,6 @@ export class Test extends BaseController {
         return new Ok();
     }
 
-    @File()
-    public testFile() {
-        return new Ok();
-    }
-
     @Put()
     public testPut() {
         return new Ok();
@@ -55,5 +59,83 @@ export class Test extends BaseController {
     @Get()
     public testViewIntl() {
         return new PugResponse("test-view-intl.pug", { sampleText: "witaj świecie" });
+    }
+
+
+
+    @Get()
+    public testQueryParam(@Query() first: string, @Query() second: string) {
+
+        Test.QueryParams = {
+            first,
+            second
+        };
+
+        return new Ok();
+    }
+
+    @Post()
+    public testPostParam(@Body() first: string, @Body() second: string) {
+
+        Test.BodyBarams = {
+            first,
+            second
+        };
+
+        return new Ok();
+    }
+
+    @Get("testParamsParams/:id")
+    public testParamsParams(@Param() id: number) {
+
+        Test.ParamsParams = {
+            id
+        };
+
+        return new Ok({
+            id
+        });
+    }
+
+    @Post()
+    public testForm(@Form() contact: any) {
+        Test.ParamsForm = contact;
+        return new Ok();
+    }
+
+    @Post()
+    public testMultipartForm(@Form() contact: any, @Upload({}) index: File) {
+
+        Test.ParamsMultiForm = contact;
+        Test.ParamsFile = index;
+
+        return new Ok();
+    }
+
+    @Get()
+    public testFileResponse() {
+        return new FileResponse(normalize(join(resolve(__dirname), "./../public/index.html")), "index.html");
+    }
+
+    @Get()
+    public testValidation(@Query({
+        type: "integer"
+    }) id: number) {
+        return new Ok({
+            id
+        });
+    }
+
+    @Post()
+    public testValidation2(@Body({
+        type: "object",
+        properties: {
+            id: { type: "number" }
+        },
+        required: ["id"]
+    }) data: any) {
+        return new Ok({
+            data
+        });
     }
 }

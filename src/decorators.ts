@@ -1,4 +1,4 @@
-import { RouteType, IRouteParameter, ParameterType, IControllerDescriptor, BasePolicy, BaseMiddleware, IRoute, IFileOptions } from "./interfaces";
+import { RouteType, IRouteParameter, ParameterType, IControllerDescriptor, BasePolicy, BaseMiddleware, IRoute, IUploadOptions } from "./interfaces";
 
 
 export const CONTROLLED_DESCRIPTOR_SYMBOL = Symbol("CONTROLLER_SYMBOL");
@@ -14,7 +14,7 @@ function Controller(callback: (controller: IControllerDescriptor, target: any, p
                 Routes: new Map<string, IRoute>()
             };
 
-            Reflect.defineMetadata(CONTROLLED_DESCRIPTOR_SYMBOL, metadata,   target.prototype || target);
+            Reflect.defineMetadata(CONTROLLED_DESCRIPTOR_SYMBOL, metadata, target.prototype || target);
         }
 
         if (callback) {
@@ -54,13 +54,14 @@ function Route(callback: (controller: IControllerDescriptor, route: IRoute, targ
     });
 }
 
-function Parameter(type: ParameterType, schema: any) {
+function Parameter(type: ParameterType, schema: any, options?: any) {
     return (_: IControllerDescriptor, route: IRoute, target: any, propertyKey: string, index: number) => {
         const param: IRouteParameter = {
             Index: index,
             Name: "",
             RuntimeType: Reflect.getMetadata("design:paramtypes", target.prototype || target, propertyKey)[index],
             Schema: schema,
+            Options: options,
             Type: type,
         };
 
@@ -134,6 +135,36 @@ export function Param(schema?: any) {
 }
 
 /**
+ * 
+ * Parameter as file
+ * 
+ * @param options upload options
+ */
+export function Upload(options?: IUploadOptions) {
+    return Route(Parameter(ParameterType.FromFile, null, options));
+}
+
+/**
+ * 
+ * Parameter taken from form data (multipart-form)
+ * 
+ * @param options upload options
+ */
+export function Form(schema?: any) {
+    return Route(Parameter(ParameterType.FromForm, schema));
+}
+
+/**
+ * 
+ * Parameter taken from form data (multipart-form)
+ * 
+ * @param options upload options
+ */
+export function Model(model: Constructor<any>) {
+    return Route(Parameter(ParameterType.FromModel, null, { type: model }));
+}
+
+/**
  * Creates HEAD http request method
  * @param path - url path to method eg. /foo/bar/:id
  */
@@ -170,19 +201,7 @@ export function Del(path?: string) {
     });
 }
 
-/**
- * Creates FILE http request method
- * @param path - url path to method eg. /foo/bar/:id
- */
-export function File(options?: IFileOptions, path?: string) {
-    return Route((_, route: IRoute) => {
-        route.Type = RouteType.FILE;
-        route.InternalType = RouteType.GET;
-        route.Path = path;
-        route.Options = options;
-    });
-}
-
+ 
 /**
  * Creates PUT http request method
  * @param path - url path to method eg. /foo/bar/:id
