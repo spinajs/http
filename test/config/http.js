@@ -1,26 +1,24 @@
-// tslint:disable: no-var-requires
 const express = require('express');
+const  path = require('path');
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const compression = require("compression");
 
-import { join, normalize, resolve } from 'path';
-import { HttpAcceptHeaders } from "../interfaces";
-
-function dir(path: string) {
-    return resolve(normalize(join(__dirname, path)));
+function dir(p) {
+    return path.resolve(path.normalize(path.join(__dirname, p)));
 }
 
 module.exports = {
     system: {
         dirs: {
-            locales: [dir("./../locales")],
-            views: [dir("./../views")],
-            controllers: [dir("./controllers")],
+            locales: [dir("./../../src/locales")],
+            views: [dir("./../../src/views")],
+            controllers: [dir("./../controllers")],
+
         }
     },
     http: {
-        port: 1337,
+        port: 8888,
         middlewares: [
             helmet(),
             express.json({
@@ -36,8 +34,8 @@ module.exports = {
         /**
          * Default file receiving options
          */
-        Files: {
-            MaxSize: 1024 * 1024, // 1 MB by default
+        Files:{
+            MaxSize : 1024 * 1024, // 1 MB by default
 
             // default place where incoming files are copied, can be overriden in @File() options
             BasePath: dir("./../../data/files")
@@ -51,19 +49,30 @@ module.exports = {
                 /**
                  * virtual prefix in url eg. http://localhost:3000/static/images/kitten.jpg
                  */
+                Route: '/responses',
+
+                /**
+                 * full path to folder with static content
+                 */
+                Path: dir('/../../src/static'),
+            },
+            {
+                /**
+                 * virtual prefix in url eg. http://localhost:3000/static/images/kitten.jpg
+                 */
                 Route: '/static',
 
                 /**
                  * full path to folder with static content
                  */
-                Path: dir('/../../public'),
+                Path: dir('/../public'),
             },
         ],
 
         /**
          * Whitch accept headers we support (default JSON & HTML)
          */
-        AcceptHeaders: HttpAcceptHeaders.HTML | HttpAcceptHeaders.JSON,
+        AcceptHeaders: 1 | 2,
 
         /**
          * Last resort fatal error fallback template, embedded in code

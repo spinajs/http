@@ -14,7 +14,7 @@ export class BadRequest extends Response {
     super(data);
   }
 
-  public async execute(_req: express.Request, _res: express.Response): Promise<ResponseFunction | void> {
+  public async execute(_req: express.Request, _res: express.Response): Promise<ResponseFunction> {
     return httpResponse(this.responseData, HTTP_STATUS_CODE.BAD_REQUEST, 'responses/badRequest');
   }
 }

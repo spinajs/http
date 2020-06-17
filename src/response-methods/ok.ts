@@ -9,7 +9,7 @@ import { httpResponse, Response, ResponseFunction } from '../responses';
  */
 export class Ok extends Response {
 
-  constructor(data: any) {
+  constructor(data?: any) {
     super(data);
   }
 

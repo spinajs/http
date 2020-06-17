@@ -1,14 +1,15 @@
- 
+import { ResponseFunction } from './responses';
+
 import { AsyncModule, IContainer, Autoinject, Injectable } from "@spinajs/di";
 import { Configuration } from "@spinajs/configuration";
 import { Logger, Log } from "@spinajs/log";
-import * as Express from 'express';
 import { Server } from "http";
 import { RequestHandler } from "express";
 import { IHttpStaticFileConfiguration } from "./interfaces";
 import * as fs from "fs";
 import { UnexpectedServerError, AuthenticationFailed, Forbidden, InvalidArgument, BadRequest, ValidationFailed, JsonValidationFailed, ExpectedResponseUnacceptable, ResourceNotFound, IOFail, MethodNotImplemented } from "@spinajs/exceptions";
-import { Unauthorized, NotFound, ServerError, BadRequest as BadRequestResponse, Forbidden as ForbiddenResponse  } from "./response-methods";
+import { Unauthorized, NotFound, ServerError, BadRequest as BadRequestResponse, Forbidden as ForbiddenResponse } from "./response-methods";
+import Express = require("express");
 
 
 @Injectable()
@@ -52,7 +53,7 @@ export class HttpServer extends AsyncModule {
         /**
          * Server static files
          */
-        this.Configuration.get<IHttpStaticFileConfiguration[]>('http.static', []).forEach(s => {
+        this.Configuration.get<IHttpStaticFileConfiguration[]>('http.Static', []).forEach(s => {
 
             if (!fs.existsSync(s.Path)) {
                 this.Log.error(`static file path ${s.Path} not exists`);
@@ -67,11 +68,18 @@ export class HttpServer extends AsyncModule {
 
     }
 
+    /**
+     * Starts http server & express
+     */
     public start() {
 
         // start http server & express
         const port = this.Configuration.get('http.port', 1337);
         return new Promise((res) => {
+
+            this.handleResponse();
+            this.handleErrors();
+
             this.Server = this.Express.listen(port, () => {
                 this.Log.info(`Http server started at port ${port}`);
                 res();
@@ -94,11 +102,13 @@ export class HttpServer extends AsyncModule {
     protected handleResponse() {
         this.Express.use((req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
             if (!res.locals.response) {
-                next(new UnexpectedServerError(`Route not found ${req.method}:${req.originalUrl}`));
+                next(new ResourceNotFound(`Route not found ${req.method}:${req.originalUrl}`));
                 return;
             }
 
-            res.locals.execute(req, res, next);
+            res.locals.response.execute(req, res).then((callback: ResponseFunction) => {
+                callback(req, res);
+            });
         });
     }
 
@@ -106,10 +116,9 @@ export class HttpServer extends AsyncModule {
      * Handles thrown exceptions in actions.
      */
     protected handleErrors() {
-        this.Express.use((err: any, _req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
+        this.Express.use((err: any, req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
 
-            if(!err)
-            {
+            if (!err) {
                 return next();
             }
 
@@ -125,33 +134,36 @@ export class HttpServer extends AsyncModule {
                 error.stack = err.stack ? err.stack : err.parameter && err.parameter.stack;
             }
 
+            let response = null;
 
             switch (err.constructor) {
                 case AuthenticationFailed:
-                    res.locals.response = new Unauthorized({ error: err });
+                    response = new Unauthorized({ error: err });
                     break;
                 case Forbidden:
-                    res.locals.response = new ForbiddenResponse({ error: err });
+                    response = new ForbiddenResponse({ error: err });
                     break;
                 case InvalidArgument:
                 case BadRequest:
                 case ValidationFailed:
                 case JsonValidationFailed:
                 case ExpectedResponseUnacceptable:
-                    res.locals.response = new BadRequestResponse({ error: err });
+                    response = new BadRequestResponse({ error: err });
                     break;
                 case ResourceNotFound:
-                    res.locals.response = new NotFound({ error: err });
+                    response = new NotFound({ error: err });
                     break;
                 case UnexpectedServerError:
                 case IOFail:
                 case MethodNotImplemented:
                 default:
-                    res.locals.response = new ServerError({ error: err });
+                    response = new ServerError({ error: err });
                     break;
             }
 
-            next(err);
+            response.execute(req, res).then((callback: ResponseFunction) => {
+                callback(req, res);
+            });
         });
     }
 }

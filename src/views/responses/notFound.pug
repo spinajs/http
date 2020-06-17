@@ -1,0 +1,11 @@
+html
+    head
+        title  #{__("Not found")}
+        
+        link(href="/responses/style.css",rel="stylesheet")
+    body    
+        div(class="container")
+            div(class="item")
+                div(class="entry")
+                    h1 404 - #{__("Not found")}
+                    div #{__(error.message)}

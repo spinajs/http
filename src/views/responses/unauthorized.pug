@@ -1,0 +1,11 @@
+html
+    head
+        title  #{__("Unauthorized")}
+        
+        link(href="/responses/style.css",rel="stylesheet")
+    body    
+        div(class="container")
+            div(class="item")
+                div(class="entry")
+                    h1 401 - #{__("Unauthorized")}
+                    div #{__(error.message)}

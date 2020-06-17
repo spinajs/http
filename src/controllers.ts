@@ -3,10 +3,12 @@ import { AsyncModule, IContainer, Autoinject, DI } from "@spinajs/di";
 import * as express from "express";
 import { CONTROLLED_DESCRIPTOR_SYMBOL } from './decorators';
 import { ValidationFailed, UnexpectedServerError } from "@spinajs/exceptions";
-import { ClassInfo, TypescriptCompiler, ListFromFiles } from "@spinajs/reflection";
+import { ClassInfo, TypescriptCompiler, ResolveFromFiles } from "@spinajs/reflection";
 import { HttpServer } from './server';
 import { Logger, Log } from '@spinajs/log';
-import * as ajv from 'ajv';
+
+// tslint:disable-next-line: no-var-requires
+import Ajv = require("ajv");
 
 export abstract class BaseController extends AsyncModule implements IController {
 
@@ -16,22 +18,17 @@ export abstract class BaseController extends AsyncModule implements IController 
     [action: string]: any;
 
     protected _router: express.Router;
-    protected _name: string;
 
     protected Container: IContainer;
+
+    @Logger({ module: 'BaseController' })
+    protected Log: Log;
 
     /**
      * Express router with middleware stack
      */
     public get Router(): express.Router {
         return this._router;
-    }
-
-    /**
-     * Controller name
-     */
-    public get Name(): string {
-        return this._name;
     }
 
     /**
@@ -47,7 +44,7 @@ export abstract class BaseController extends AsyncModule implements IController 
      * It can be defined via `@BasePath` decorator, defaults to controller name without `Controller` part.
      */
     public get BasePath(): string {
-        return this.Descriptor.BasePath ? this.Descriptor.BasePath : this.Name.substring(0, this.Name.indexOf("Controller")).toLowerCase();
+        return this.Descriptor.BasePath ? this.Descriptor.BasePath : this.constructor.name.toLowerCase();
     }
 
 
@@ -56,22 +53,32 @@ export abstract class BaseController extends AsyncModule implements IController 
         const self = this;
 
         this.Container = container;
+        this._router = express.Router();
 
         for (const [, route] of this.Descriptor.Routes) {
             const handlers: express.RequestHandler[] = [];
             const action: RouteCallback = this[route.Method];
             const path = route.Path ? `/${this.BasePath}/${route.Path}` : `/${this.BasePath}/${route.Method}`;
-            const middlewares = await Promise.all<BaseMiddleware>(this.Metadata.Middlewares.concat(route.Middlewares || []).map((m: any) => self.Container.resolve(m.Type, m.Options)));
+            const middlewares = await Promise.all<BaseMiddleware>(this.Descriptor.Middlewares.concat(route.Middlewares || []).map((m: any) => self.Container.resolve(m.Type, m.Options)));
+
+            this.Log.trace(`Registering route ${route.Method}:${path}`);
 
             handlers.push(...middlewares.filter(m => m.isEnabled(route, this)).map(m => _invokeAction(m.onBeforeAction.bind(m))));
             handlers.push(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-                const args = (await _extractRouteArgs(route, req)).concat([req, res, next]);
-                res.locals.response = await action.call(this, ...args);
+
+                try {
+                    const args = (await _extractRouteArgs(route, req)).concat([req, res, next]);
+                    res.locals.response = await action.call(this, ...args);
+                    next();
+                } catch (err) {
+                    next(err);
+                }
+
             });
             handlers.push(...middlewares.filter(m => m.isEnabled(route, this)).map(m => _invokeAction(m.onAfterAction.bind(m))));
 
             // register to express router
-            (this.router as any)[route.Type as string](path, handlers);
+            (this._router as any)[route.InternalType as string](path, handlers);
         }
 
         function _invokeAction(action: any) {
@@ -121,7 +128,7 @@ export abstract class BaseController extends AsyncModule implements IController 
 
                 if (param.Schema) {
 
-                    const validator = await self.Container.resolve<ajv.Ajv>("ControllerValidator");
+                    const validator = await self.Container.resolve<any>("ControllerValidator");
                     if (!validator) {
                         throw new UnexpectedServerError("validation service is not avaible");
                     }
@@ -139,18 +146,21 @@ export abstract class BaseController extends AsyncModule implements IController 
 }
 
 export class Controllers extends AsyncModule {
-    @Logger({ module: 'ORM' })
+
+    /**
+     * Loaded controllers
+     */
+    @ResolveFromFiles('/**/!(*.d).{ts,js}', 'system.dirs.controllers')
+    public Controllers: Promise<Array<ClassInfo<BaseController>>>;
+
+
+    @Logger({ module: 'Controllers' })
     protected Log: Log;
 
     protected Container: IContainer;
 
     @Autoinject()
     protected Server: HttpServer;
-    /**
-     * Loaded controllers
-     */
-    @ListFromFiles('/**/!(*.d).{ts,js}', 'system.dirs.controllers')
-    protected Controllers: Promise<Array<ClassInfo<BaseController>>>;
 
 
     public async resolveAsync(container: IContainer): Promise<void> {
@@ -161,7 +171,7 @@ export class Controllers extends AsyncModule {
          * we use factory func register as singlegon
          */
         DI.register(() => {
-            return new ajv();
+            return new Ajv();
         })
             .as("ControllerValidator")
             .singleInstance();
@@ -176,8 +186,6 @@ export class Controllers extends AsyncModule {
 
             for (const [name, route] of controller.instance.Descriptor.Routes) {
                 if (members.has(name as string)) {
-
-                    this.Log.trace(`Registering ${controller.name}:${route.Path}`);
 
                     const member = members.get(name as string);
 

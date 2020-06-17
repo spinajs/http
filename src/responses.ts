@@ -11,13 +11,10 @@ import { IOFail } from "@spinajs/exceptions";
 import * as randomstring from 'randomstring';
 import { Intl } from "@spinajs/intl";
 
-const __ = (DI.get<Intl>(Intl)).__;
-const __n = (DI.get<Intl>(Intl)).__n;
-const __l = (DI.get<Intl>(Intl)).__l;
-const __h = (DI.get<Intl>(Intl)).__h;
+
 
 export type ResponseFunction = (req: express.Request, res: express.Response) => void;
- 
+
 
 export abstract class Response {
     protected responseData: any;
@@ -26,7 +23,7 @@ export abstract class Response {
         this.responseData = responseData;
     }
 
-    public abstract async execute(req: express.Request, res: express.Response, next? : express.NextFunction): Promise<ResponseFunction | void>;
+    public abstract async execute(req: express.Request, res: express.Response, next?: express.NextFunction): Promise<ResponseFunction>;
 }
 
 /**
@@ -53,8 +50,14 @@ export function jsonResponse(model: any, status?: HTTP_STATUS_CODE) {
  * @param status - optional status code
  */
 export function pugResponse(file: string, model: any, status?: HTTP_STATUS_CODE) {
-    const log: Log = DI.get<LogModule>('LogModule').getLogger();
-    const cfg: Configuration = DI.get('Configuration');
+
+    const cfg: Configuration = DI.resolve(Configuration);
+    const intl = DI.get<Intl>(Intl);
+
+    const __ = intl.__.bind(intl);
+    const __n = intl.__n.bind(intl);
+    const __l = intl.__l.bind(intl);
+    const __h = intl.__h.bind(intl);
 
     return (_req: express.Request, res: express.Response) => {
         res.set('Content-Type', 'text/html');
@@ -63,12 +66,17 @@ export function pugResponse(file: string, model: any, status?: HTTP_STATUS_CODE)
             try {
                 _render(file, model, status);
             } catch (err) {
+                const log: Log = DI.get<LogModule>(LogModule).getLogger();
+
                 log.warn(`Cannot render pug file ${file}, error: ${err.message}:${err.stack}`, err);
 
                 // try to render server error response
                 _render('responses/serverError.pug', err, HTTP_STATUS_CODE.INTERNAL_ERROR);
             }
         } catch (err) {
+
+            const log: Log = DI.resolve<LogModule>(LogModule).getLogger();
+
             // final fallback rendering error fails, we render embedded html error page
             const ticketNo = randomstring.generate(7);
 
@@ -122,7 +130,7 @@ export function pugResponse(file: string, model: any, status?: HTTP_STATUS_CODE)
  *                  to `Accept` header
  */
 export function httpResponse(model: any, code: HTTP_STATUS_CODE, template: string) {
-    const cfg: Configuration = DI.get('Configuration');
+    const cfg: Configuration = DI.resolve(Configuration);
     const acceptedHeaders = cfg.get<HttpAcceptHeaders>('http.AcceptHeaders');
 
     return (req: express.Request, res: express.Response) => {

@@ -1,0 +1,11 @@
+html
+    head
+        title  #{__("Forbidden")}
+        
+        link(href="/responses/style.css",rel="stylesheet")
+    body    
+        div(class="container")
+            div(class="item")
+                div(class="entry")
+                    h1 403 - #{__("Forbidden")}
+                    div #{__(error.message)}

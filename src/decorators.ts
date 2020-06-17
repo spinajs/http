@@ -3,9 +3,9 @@ import { RouteType, IRouteParameter, ParameterType, IControllerDescriptor, BaseP
 
 export const CONTROLLED_DESCRIPTOR_SYMBOL = Symbol("CONTROLLER_SYMBOL");
 
-export function Controller(callback: (controller: IControllerDescriptor, target: any, propertyKey: symbol | string, indexOrDescriptor: number | PropertyDescriptor) => void): any {
+function Controller(callback: (controller: IControllerDescriptor, target: any, propertyKey: symbol | string, indexOrDescriptor: number | PropertyDescriptor) => void): any {
     return (target: any, propertyKey: string | symbol, indexOrDescriptor: number | PropertyDescriptor) => {
-        let metadata: IControllerDescriptor = Reflect.getMetadata(CONTROLLED_DESCRIPTOR_SYMBOL, target.prototype || target);
+        let metadata: IControllerDescriptor = Reflect.getMetadata(CONTROLLED_DESCRIPTOR_SYMBOL, target);
         if (!metadata) {
             metadata = {
                 BasePath: null,
@@ -14,11 +14,11 @@ export function Controller(callback: (controller: IControllerDescriptor, target:
                 Routes: new Map<string, IRoute>()
             };
 
-            Reflect.defineMetadata(CONTROLLED_DESCRIPTOR_SYMBOL, metadata, target.prototype || target);
+            Reflect.defineMetadata(CONTROLLED_DESCRIPTOR_SYMBOL, metadata,  target);
         }
 
         if (callback) {
-            callback(metadata, target.prototype || target, propertyKey, indexOrDescriptor)
+            callback(metadata, target, propertyKey, indexOrDescriptor)
         }
     }
 }
@@ -44,6 +44,8 @@ function Route(callback: (controller: IControllerDescriptor, route: IRoute, targ
                 }
             }
         }
+
+        metadata.Routes.set(propertyKey, route);
 
         if (callback) {
             callback(metadata, route, target, propertyKey, indexOrDescriptor);
@@ -133,28 +135,24 @@ export function Param(schema?: any) {
 /**
  * Creates HEAD http request method
  * @param path - url path to method eg. /foo/bar/:id
- * @param routeName - route name visible in api. If undefined, method name is taken
  */
-export function Head(path?: string, routeName?: string) {
+export function Head(path?: string) {
     return Route((_, route: IRoute) => {
         route.Type = RouteType.HEAD;
         route.InternalType = RouteType.HEAD;
         route.Path = path;
-        route.Method = routeName;
     });
 }
 
 /**
  * Creates PATCH http request method
  * @param path - url path to method eg. /foo/bar/:id
- * @param routeName - route name visible in api. If undefined, method name is taken
  */
-export function Patch(path?: string, routeName?: string) {
+export function Patch(path?: string) {
     return Route((_, route: IRoute) => {
         route.Type = RouteType.PATCH;
         route.InternalType = RouteType.PATCH;
         route.Path = path;
-        route.Method = routeName;
     });
 }
 
@@ -163,26 +161,23 @@ export function Patch(path?: string, routeName?: string) {
  * @param path - url path to method eg. /foo/bar/:id
  * @param routeName - route name visible in api. If undefined, method name is taken
  */
-export function Del(path?: string, routeName?: string) {
+export function Del(path?: string) {
     return Route((_, route: IRoute) => {
         route.Type = RouteType.DELETE;
         route.InternalType = RouteType.DELETE;
         route.Path = path;
-        route.Method = routeName;
     });
 }
 
 /**
  * Creates FILE http request method
  * @param path - url path to method eg. /foo/bar/:id
- * @param routeName - route name visible in api. If undefined, method name is taken
  */
-export function File(options?: IFileOptions, path?: string, routeName?: string) {
+export function File(options?: IFileOptions, path?: string) {
     return Route((_, route: IRoute) => {
         route.Type = RouteType.FILE;
         route.InternalType = RouteType.GET;
         route.Path = path;
-        route.Method = routeName;
         route.Options = options;
     });
 }
@@ -190,28 +185,24 @@ export function File(options?: IFileOptions, path?: string, routeName?: string) 
 /**
  * Creates PUT http request method
  * @param path - url path to method eg. /foo/bar/:id
- * @param routeName - route name visible in api. If undefined, method name is taken
  */
-export function Put(path?: string, routeName?: string) {
+export function Put(path?: string) {
     return Route((_, route: IRoute) => {
         route.Type = RouteType.PUT;
         route.InternalType = RouteType.PUT;
         route.Path = path;
-        route.Method = routeName;
     });
 }
 
 /**
  * Creates GET http request method
  * @param path - url path to method eg. /foo/bar/:id
- * @param routeName - route name visible in api. If undefined, method name is taken
  */
-export function Get(path?: string, routeName?: string) {
+export function Get(path?: string) {
     return Route((_, route: IRoute) => {
         route.Type = RouteType.GET;
         route.InternalType = RouteType.GET;
         route.Path = path;
-        route.Method = routeName;
     });
 }
 
@@ -219,14 +210,12 @@ export function Get(path?: string, routeName?: string) {
  * Creates POST http request method
  *
  * @param path - url path to method eg. /foo/bar
- * @param routeName - route name visible in api. If undefined, method name is taken
  */
-export function Post(path?: string, routeName?: string) {
+export function Post(path?: string) {
     return Route((_, route: IRoute) => {
         route.Type = RouteType.GET;
         route.InternalType = RouteType.GET;
         route.Path = path;
-        route.Method = routeName;
     });
 }
 

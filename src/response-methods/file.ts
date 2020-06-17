@@ -31,7 +31,7 @@ export class FileResponse extends Response {
     }
   }
 
-  public async execute(_req: express.Request, res: express.Response): Promise<ResponseFunction | void> {
+  public async execute(_req: express.Request, res: express.Response): Promise<ResponseFunction> {
     return new Promise((resolve, reject) => {
       res.sendFile(
         this.path,

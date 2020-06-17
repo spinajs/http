@@ -1,0 +1,11 @@
+html
+    head
+        title  #{__("Server error")}
+        
+        link(href="/responses/style.css",rel="stylesheet")
+    body    
+        div(class="container")
+            div(class="item")
+                div(class="entry")
+                    h1 500 - #{__("Server error")}
+                    div #{__(error.message)}

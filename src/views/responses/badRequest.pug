@@ -1,0 +1,11 @@
+html
+    head
+        title  #{__("Bad request")}
+        
+        link(href="/responses/style.css",rel="stylesheet")
+    body    
+        div(class="container")
+            div(class="item")
+                div(class="entry")
+                    h1 400 - #{__("Bad request")}
+                    div #{__(error.message)}

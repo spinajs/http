@@ -1,4 +1,5 @@
 import * as express from 'express';
+import { Constructor } from "@spinajs/di";
 
 /**
  * Accept header enum
@@ -277,11 +278,6 @@ export interface IController {
    * Express router with middleware stack
    */
   Router: express.Router;
-
-  /**
-   * Controller name
-   */
-  Name: string;
 
   /**
    * Controller descriptor
