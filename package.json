@@ -37,8 +37,8 @@
   },
   "homepage": "https://github.com/spinajs/http#readme",
   "dependencies": {
-    "@spinajs/di": "^1.0.11",
-    "@spinajs/intl": "^1.0.0",
+    "@spinajs/di": "^1.0.17",
+    "@spinajs/intl": "^1.0.1",
     "ajv": "^6.12.2",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.5",
