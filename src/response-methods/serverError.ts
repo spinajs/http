@@ -11,7 +11,7 @@ import { httpResponse, Response, ResponseFunction } from '../responses';
 export class ServerError extends Response {
 
   constructor(data: any) {
-    super(data);
+    super({ error: data });
   }
 
   public async execute(_req: express.Request, _res: express.Response): Promise<ResponseFunction> {

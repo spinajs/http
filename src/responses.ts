@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import * as _ from "lodash";
 import { IOFail } from "@spinajs/exceptions";
 import * as randomstring from 'randomstring';
-import { Intl } from "@spinajs/intl";
+import { Intl, IPhraseWithOptions } from "@spinajs/intl";
 
 
 
@@ -38,9 +38,70 @@ export function jsonResponse(model: any, status?: HTTP_STATUS_CODE) {
 
         if (model) {
             res.json(model);
+        } else {
+            res.json();
         }
     };
 }
+
+/**
+ * Sends data & sets proper header as json
+ *
+ * @param model - data to send
+ * @param status - status code
+ */
+export function textResponse(model: any, status?: HTTP_STATUS_CODE) {
+    return (_req: express.Request, res: express.Response) => {
+        res.status(status ? status : HTTP_STATUS_CODE.OK);
+
+        if (model) {
+            res.set('Content-Type', 'text/plain');
+            res.send(JSON.stringify(model));
+        }
+    };
+}
+
+const __translate = (lang: string) => {
+
+    return (text: string | IPhraseWithOptions, ...args: any[]) => {
+
+        const intl = DI.get<Intl>(Intl);
+        if (typeof text === 'string') {
+            return intl.__({
+                phrase: text,
+                locale: lang
+            }, ...args);
+        }
+
+        return intl.__(text, ...args);
+    }
+}
+
+const __translateNumber = (lang: string) => {
+
+    return (text: string | IPhraseWithOptions, count: number) => {
+
+        const intl = DI.get<Intl>(Intl);
+        if (typeof text === 'string') {
+            return intl.__n({
+                phrase: text,
+                locale: lang
+            }, count);
+        }
+
+        return intl.__n(text, count);
+    }
+}
+
+const __translateL = (text: string) => {
+    const intl = DI.get<Intl>(Intl);
+    return intl.__l(text);
+
+};
+const __translateH = (text: string) => {
+    const intl = DI.get<Intl>(Intl);
+    return intl.__h(text);
+};
 
 /**
  * Sends html response & sets proper header. If template is not avaible, handles proper error rendering.
@@ -52,15 +113,11 @@ export function jsonResponse(model: any, status?: HTTP_STATUS_CODE) {
 export function pugResponse(file: string, model: any, status?: HTTP_STATUS_CODE) {
 
     const cfg: Configuration = DI.resolve(Configuration);
-    const intl = DI.get<Intl>(Intl);
 
-    const __ = intl.__.bind(intl);
-    const __n = intl.__n.bind(intl);
-    const __l = intl.__l.bind(intl);
-    const __h = intl.__h.bind(intl);
-
-    return (_req: express.Request, res: express.Response) => {
+    return (req: express.Request, res: express.Response) => {
         res.set('Content-Type', 'text/html');
+
+     
 
         try {
             try {
@@ -71,7 +128,7 @@ export function pugResponse(file: string, model: any, status?: HTTP_STATUS_CODE)
                 log.warn(`Cannot render pug file ${file}, error: ${err.message}:${err.stack}`, err);
 
                 // try to render server error response
-                _render('responses/serverError.pug', err, HTTP_STATUS_CODE.INTERNAL_ERROR);
+                _render('responses/serverError.pug', { error: err }, HTTP_STATUS_CODE.INTERNAL_ERROR);
             }
         } catch (err) {
 
@@ -88,15 +145,16 @@ export function pugResponse(file: string, model: any, status?: HTTP_STATUS_CODE)
 
         function _render(f: string, m: any, c: HTTP_STATUS_CODE) {
             const view = getView(f);
+            const language : string = req.query[cfg.get<string>("intl.queryParameter")] as any;
 
             const content = pugTemplate.renderFile(
                 view,
                 _.merge(m, {
                     // add i18n functions as globals
-                    __,
-                    __n,
-                    __l,
-                    __h,
+                    __: __translate(language),
+                    __n: __translateNumber(language),
+                    __l: __translateL,
+                    __h: __translateH,
                 }),
             );
 
@@ -136,10 +194,10 @@ export function httpResponse(model: any, code: HTTP_STATUS_CODE, template: strin
     return (req: express.Request, res: express.Response) => {
         if (req.accepts('html') && (acceptedHeaders & HttpAcceptHeaders.HTML) === HttpAcceptHeaders.HTML) {
             pugResponse(`${template}.pug`, model, code)(req, res);
-        } else if (req.accepts('json') && (acceptedHeaders & HttpAcceptHeaders.HTML) === HttpAcceptHeaders.JSON) {
+        } else if (req.accepts('json') && (acceptedHeaders & HttpAcceptHeaders.JSON) === HttpAcceptHeaders.JSON) {
             jsonResponse(model, code)(req, res);
         } else {
-            jsonResponse(model, code)(req, res);
+            textResponse(model, code)(req, res);
         }
     };
 }

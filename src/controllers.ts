@@ -1,8 +1,8 @@
-import { IController, IControllerDescriptor, BaseMiddleware, ParameterType, IRoute, RouteCallback } from './interfaces';
+import { IController, IControllerDescriptor,IPolicyDescriptor, BaseMiddleware, ParameterType, IRoute, RouteCallback, IMiddlewareDescriptor, BasePolicy } from './interfaces';
 import { AsyncModule, IContainer, Autoinject, DI } from "@spinajs/di";
 import * as express from "express";
 import { CONTROLLED_DESCRIPTOR_SYMBOL } from './decorators';
-import { ValidationFailed, UnexpectedServerError } from "@spinajs/exceptions";
+import { ValidationFailed, UnexpectedServerError, Forbidden } from "@spinajs/exceptions";
 import { ClassInfo, TypescriptCompiler, ResolveFromFiles } from "@spinajs/reflection";
 import { HttpServer } from './server';
 import { Logger, Log } from '@spinajs/log';
@@ -59,10 +59,22 @@ export abstract class BaseController extends AsyncModule implements IController 
             const handlers: express.RequestHandler[] = [];
             const action: RouteCallback = this[route.Method];
             const path = route.Path ? `/${this.BasePath}/${route.Path}` : `/${this.BasePath}/${route.Method}`;
-            const middlewares = await Promise.all<BaseMiddleware>(this.Descriptor.Middlewares.concat(route.Middlewares || []).map((m: any) => self.Container.resolve(m.Type, m.Options)));
+            const middlewares = await Promise.all<BaseMiddleware>(
+                this.Descriptor.Middlewares.concat(route.Middlewares || [])
+                    .map((m: IMiddlewareDescriptor) => {
+                        return self.Container.resolve(m.Type, m.Options)
+                    })
+            );
+            const policies = await Promise.all<BasePolicy>(
+                this.Descriptor.Policies.concat(route.Policies || [])
+                    .map((m: IPolicyDescriptor) => {
+                        return self.Container.resolve(m.Type, m.Options)
+                    })
+            );
 
             this.Log.trace(`Registering route ${route.Method}:${path}`);
 
+            handlers.push(...policies.filter(p => p.isEnabled(route, this)).map(p => _invokePolicyAction(p.execute.bind(p))));
             handlers.push(...middlewares.filter(m => m.isEnabled(route, this)).map(m => _invokeAction(m.onBeforeAction.bind(m))));
             handlers.push(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
@@ -86,6 +98,22 @@ export abstract class BaseController extends AsyncModule implements IController 
                 action(req, res)
                     .then(() => {
                         next();
+                    })
+                    .catch((err: any) => {
+                        next(err);
+                    });
+            };
+        }
+
+        function _invokePolicyAction(action: any) {
+            return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+                action(req, res)
+                    .then((result: boolean) => {
+                        if (result === false) {
+                            next(new Forbidden());
+                        } else {
+                            next();
+                        }
                     })
                     .catch((err: any) => {
                         next(err);

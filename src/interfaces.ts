@@ -305,12 +305,12 @@ export abstract class BaseMiddleware {
   /**
    * Called before action in middleware stack eg. to modify req or resp objects.
    */
-  public abstract onBeforeAction(req: express.Request): Promise<any>;
+  public abstract onBeforeAction(req: express.Request): Promise<void>;
 
   /**
    * Called after action in middleware stack eg. to modify response
    */
-  public abstract onAfterAction(req: express.Request): Promise<any>;
+  public abstract onAfterAction(req: express.Request): Promise<void>;
 }
 
 /**
@@ -337,7 +337,7 @@ export abstract class BasePolicy {
    * @param action action that is executed ( route info )
    * @param instance controller instance
    */
-  public abstract isEnabled(action: IRoute, instance: IControllerDescriptor): boolean;
+  public abstract isEnabled(action: IRoute, instance: IController): boolean;
 
   /**
    * 

@@ -5,7 +5,7 @@ export const CONTROLLED_DESCRIPTOR_SYMBOL = Symbol("CONTROLLER_SYMBOL");
 
 function Controller(callback: (controller: IControllerDescriptor, target: any, propertyKey: symbol | string, indexOrDescriptor: number | PropertyDescriptor) => void): any {
     return (target: any, propertyKey: string | symbol, indexOrDescriptor: number | PropertyDescriptor) => {
-        let metadata: IControllerDescriptor = Reflect.getMetadata(CONTROLLED_DESCRIPTOR_SYMBOL, target);
+        let metadata: IControllerDescriptor = Reflect.getMetadata(CONTROLLED_DESCRIPTOR_SYMBOL, target.prototype || target);
         if (!metadata) {
             metadata = {
                 BasePath: null,
@@ -14,7 +14,7 @@ function Controller(callback: (controller: IControllerDescriptor, target: any, p
                 Routes: new Map<string, IRoute>()
             };
 
-            Reflect.defineMetadata(CONTROLLED_DESCRIPTOR_SYMBOL, metadata,  target);
+            Reflect.defineMetadata(CONTROLLED_DESCRIPTOR_SYMBOL, metadata,   target.prototype || target);
         }
 
         if (callback) {
@@ -43,9 +43,10 @@ function Route(callback: (controller: IControllerDescriptor, route: IRoute, targ
                     Options: null
                 }
             }
+
+            metadata.Routes.set(propertyKey, route);
         }
 
-        metadata.Routes.set(propertyKey, route);
 
         if (callback) {
             callback(metadata, route, target, propertyKey, indexOrDescriptor);
@@ -214,7 +215,7 @@ export function Get(path?: string) {
 export function Post(path?: string) {
     return Route((_, route: IRoute) => {
         route.Type = RouteType.GET;
-        route.InternalType = RouteType.GET;
+        route.InternalType = RouteType.POST;
         route.Path = path;
     });
 }

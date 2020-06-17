@@ -1,5 +1,5 @@
 const express = require('express');
-const  path = require('path');
+const path = require('path');
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const compression = require("compression");
@@ -11,11 +11,20 @@ function dir(p) {
 module.exports = {
     system: {
         dirs: {
-            locales: [dir("./../../src/locales")],
-            views: [dir("./../../src/views")],
+            locales: [dir("./../../src/locales"), dir("./../locales")],
+            views: [dir("./../../src/views"), dir("./../views")],
             controllers: [dir("./../controllers")],
 
         }
+    },
+    intl: {
+        // supported locales
+        locales: ['en', 'pl'],
+
+        defaultLocale: 'pl',
+
+        // query parameter to switch locale (ie. /home?lang=ch) - defaults to NULL
+        queryParameter: 'lang',
     },
     http: {
         port: 8888,
@@ -34,8 +43,8 @@ module.exports = {
         /**
          * Default file receiving options
          */
-        Files:{
-            MaxSize : 1024 * 1024, // 1 MB by default
+        Files: {
+            MaxSize: 1024 * 1024, // 1 MB by default
 
             // default place where incoming files are copied, can be overriden in @File() options
             BasePath: dir("./../../data/files")

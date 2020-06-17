@@ -1,3 +1,5 @@
+import { PugResponse } from './../../src';
+import { ServerError } from './../../src';
 import { BaseController, BasePath, Get, Post, Head, Patch, Del, Put, File, Ok } from "../../src";
 
 
@@ -6,7 +8,7 @@ export class Test extends BaseController {
 
     @Get()
     public testGet() {
-        return new Ok();
+        return new Ok({ hello: "world" });
     }
 
     @Post()
@@ -38,5 +40,20 @@ export class Test extends BaseController {
     @Put()
     public testPut() {
         return new Ok();
+    }
+
+    @Get()
+    public testError() {
+        return new ServerError({ error: true, message: "sample error message" });
+    }
+
+    @Get()
+    public testViewResponse() {
+        return new PugResponse("test-view.pug", { sampleText: "hello world" });
+    }
+
+    @Get()
+    public testViewIntl() {
+        return new PugResponse("test-view-intl.pug", { sampleText: "witaj świecie" });
     }
 }
