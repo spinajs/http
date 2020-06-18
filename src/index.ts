@@ -4,3 +4,4 @@ export * from "./decorators";
 export * from "./responses";
 export * from "./controllers";
 export * from "./server";
+export * from "./dto";

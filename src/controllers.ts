@@ -1,7 +1,7 @@
 import { IController, IControllerDescriptor, IPolicyDescriptor, BaseMiddleware, ParameterType, IRoute, RouteCallback, IMiddlewareDescriptor, BasePolicy } from './interfaces';
 import { AsyncModule, IContainer, Autoinject, DI } from "@spinajs/di";
 import * as express from "express";
-import { CONTROLLED_DESCRIPTOR_SYMBOL } from './decorators';
+import { CONTROLLED_DESCRIPTOR_SYMBOL, SCHEMA_SYMBOL } from './decorators';
 import { ValidationFailed, UnexpectedServerError, Forbidden } from "@spinajs/exceptions";
 import { ClassInfo, TypescriptCompiler, ResolveFromFiles } from "@spinajs/reflection";
 import { HttpServer } from './server';
@@ -75,7 +75,7 @@ export abstract class BaseController extends AsyncModule implements IController 
 
             this.Log.trace(`Registering route ${route.Method}:${path}`);
 
-            handlers.push(...policies.filter(p => p.isEnabled(route, this)).map(p => _invokePolicyAction(p.execute.bind(p))));
+            handlers.push(...policies.filter(p => p.isEnabled(route, this)).map(p => _invokePolicyAction(p.execute.bind(p), route)));
             handlers.push(...middlewares.filter(m => m.isEnabled(route, this)).map(m => _invokeAction(m.onBeforeAction.bind(m))));
             handlers.push(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
@@ -106,9 +106,9 @@ export abstract class BaseController extends AsyncModule implements IController 
             };
         }
 
-        function _invokePolicyAction(action: any) {
-            return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-                action(req, res)
+        function _invokePolicyAction(action: any, route : IRoute) {
+            return (req: express.Request, _res: express.Response, next: express.NextFunction) => {
+                action(req, route, this)
                     .then((result: boolean) => {
                         if (result === false) {
                             next(new Forbidden());
@@ -167,14 +167,17 @@ export abstract class BaseController extends AsyncModule implements IController 
                     args[param.Index] = source;
                 }
 
-                if (param.Schema) {
+                const dtoSchema = Reflect.getMetadata(SCHEMA_SYMBOL, param.RuntimeType);
+                const schema = dtoSchema ?? param.Schema;
+
+                if (schema) {
 
                     const validator = await self.Container.resolve<any>("ControllerValidator");
                     if (!validator) {
                         throw new UnexpectedServerError("validation service is not avaible");
                     }
 
-                    const result = validator.validate(param.Schema, args[param.Index]);
+                    const result = validator.validate(schema, args[param.Index]);
                     if (!result) {
                         throw new ValidationFailed(`parameter validation error`, {
                             param: param.Name,

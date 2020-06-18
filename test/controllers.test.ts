@@ -39,9 +39,12 @@ function ctr() {
 
 
 
-describe("http & controller tests", () => {
+describe("http & controller tests", function () {
+
+    this.timeout(15000);
 
     before(async () => {
+
         DI.register(TestConfiguration).as(Configuration);
         DI.register(SpinaJsDefaultLog).as(LogModule);
 
@@ -51,6 +54,15 @@ describe("http & controller tests", () => {
         const server = await DI.resolve<HttpServer>(HttpServer);
 
         server.start();
+
+
+    });
+
+    after(async () => {
+
+        const server = await DI.resolve<HttpServer>(HttpServer);
+        server.stop();
+
     });
 
     afterEach(() => {

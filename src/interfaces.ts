@@ -393,7 +393,7 @@ export abstract class BasePolicy {
    * 
    * @param req express request object
    */
-  public abstract execute(req: express.Request): Promise<boolean>;
+  public abstract execute(req: express.Request, action: IRoute, instance: IController): Promise<boolean>;
 
 }
 

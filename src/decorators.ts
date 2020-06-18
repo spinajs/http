@@ -2,9 +2,10 @@ import { RouteType, IRouteParameter, ParameterType, IControllerDescriptor, BaseP
 
 
 export const CONTROLLED_DESCRIPTOR_SYMBOL = Symbol("CONTROLLER_SYMBOL");
+export const SCHEMA_SYMBOL = Symbol("SCHEMA_SYMBOL");
 
-function Controller(callback: (controller: IControllerDescriptor, target: any, propertyKey: symbol | string, indexOrDescriptor: number | PropertyDescriptor) => void): any {
-    return (target: any, propertyKey: string | symbol, indexOrDescriptor: number | PropertyDescriptor) => {
+function Controller(callback: (controller: IControllerDescriptor, target: any, propertyKey: symbol | string, indexOrDescriptor: number | PropertyDescriptor) => void) {
+    return (target: any, propertyKey?: string | symbol, indexOrDescriptor?: number | PropertyDescriptor) => {
         let metadata: IControllerDescriptor = Reflect.getMetadata(CONTROLLED_DESCRIPTOR_SYMBOL, target.prototype || target);
         if (!metadata) {
             metadata = {
@@ -24,7 +25,7 @@ function Controller(callback: (controller: IControllerDescriptor, target: any, p
 }
 
 
-function Route(callback: (controller: IControllerDescriptor, route: IRoute, target: any, propertyKey: string, indexOrDescriptor: number | PropertyDescriptor) => void) {
+function Route(callback: (controller: IControllerDescriptor, route: IRoute, target: any, propertyKey?: string, indexOrDescriptor?: number | PropertyDescriptor) => void) {
     return Controller((metadata: IControllerDescriptor, target: any, propertyKey: string, indexOrDescriptor: number | PropertyDescriptor) => {
 
         let route: IRoute = null;
@@ -156,7 +157,16 @@ export function Form(schema?: any) {
 
 /**
  * 
- * Parameter taken from form data (multipart-form)
+ * Shortcut for parameter as autoincrement primary key ( number greater than 0)
+ * 
+ */
+export function IncPkey() {
+    return Route(Parameter(ParameterType.FromParams, { type: "number", minimum: 0 }));
+}
+
+/**
+ * 
+ * Parameter taken from model 
  * 
  * @param options upload options
  */
@@ -201,7 +211,7 @@ export function Del(path?: string) {
     });
 }
 
- 
+
 /**
  * Creates PUT http request method
  * @param path - url path to method eg. /foo/bar/:id
@@ -237,5 +247,17 @@ export function Post(path?: string) {
         route.InternalType = RouteType.POST;
         route.Path = path;
     });
+}
+
+/**
+ * 
+ * Add schema for object eg. model or dto
+ * 
+ * @param schema schema for object
+ */
+export function Schema(schema: any) {
+    return (target: any) => {
+        Reflect.defineMetadata(SCHEMA_SYMBOL, schema, target);
+    }
 }
 

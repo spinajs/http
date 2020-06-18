@@ -87,6 +87,13 @@ export class HttpServer extends AsyncModule {
         });
     }
 
+    public stop() {
+        if (this.Server) {
+            this.Server.close();
+            this.Server = null;
+        }
+    }
+
     /**
      * Registers global middleware to express app
      *
@@ -107,7 +114,7 @@ export class HttpServer extends AsyncModule {
             }
 
             res.locals.response.execute(req, res).then((callback: ResponseFunction) => {
-                if(callback){
+                if (callback) {
                     callback(req, res);
                 }
             });
