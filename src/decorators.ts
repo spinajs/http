@@ -135,6 +135,10 @@ export function Param(schema?: any) {
     return Route(Parameter(ParameterType.FromParams, schema));
 }
 
+export function FromModel(schema?: any) {
+    return Route(Parameter(ParameterType.FromModel, schema));
+}
+
 /**
  * 
  * Parameter as file
@@ -162,6 +166,15 @@ export function Form(schema?: any) {
  */
 export function IncPkey() {
     return Route(Parameter(ParameterType.FromParams, { type: "number", minimum: 0 }));
+}
+
+/**
+ * 
+ * Shortcut for parameter as uuid primary key ( string with 32 length )
+ * 
+ */
+export function UuidPkey() {
+    return Route(Parameter(ParameterType.FromParams, { type: "string", minLength: 32, maxLength: 32 }));
 }
 
 /**

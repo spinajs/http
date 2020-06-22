@@ -2,7 +2,7 @@ import { IController, IControllerDescriptor, IPolicyDescriptor, BaseMiddleware, 
 import { AsyncModule, IContainer, Autoinject, DI } from "@spinajs/di";
 import * as express from "express";
 import { CONTROLLED_DESCRIPTOR_SYMBOL, SCHEMA_SYMBOL } from './decorators';
-import { ValidationFailed, UnexpectedServerError, Forbidden } from "@spinajs/exceptions";
+import { ValidationFailed, UnexpectedServerError, Forbidden, BadRequest, NotSupported } from "@spinajs/exceptions";
 import { ClassInfo, TypescriptCompiler, ResolveFromFiles } from "@spinajs/reflection";
 import { HttpServer } from './server';
 import { Logger, Log } from '@spinajs/log';
@@ -106,7 +106,7 @@ export abstract class BaseController extends AsyncModule implements IController 
             };
         }
 
-        function _invokePolicyAction(action: any, route : IRoute) {
+        function _invokePolicyAction(action: any, route: IRoute) {
             return (req: express.Request, _res: express.Response, next: express.NextFunction) => {
                 action(req, route, this)
                     .then((result: boolean) => {
@@ -140,6 +140,9 @@ export abstract class BaseController extends AsyncModule implements IController 
                     case ParameterType.FromQuery:
                         source = req.query;
                         break;
+                    case ParameterType.FromModel:
+                        source = await _extractModel(param.Options, param.RuntimeType, req);
+                        break;
                     case ParameterType.FromFile:
                         source = await _extractMultipart(param.Options, req, param.Type);
                         break;
@@ -152,7 +155,7 @@ export abstract class BaseController extends AsyncModule implements IController 
                 if (param.Name) {
 
                     // form fields goes to one
-                    if (param.Type === ParameterType.FromForm) {
+                    if (param.Type === ParameterType.FromForm || param.Type === ParameterType.FromModel) {
                         args[param.Index] = source;
                     } else if (param.RuntimeType.name.toLowerCase() === 'number') {
                         // query params are always sent as strings, even numbers,
@@ -188,6 +191,23 @@ export abstract class BaseController extends AsyncModule implements IController 
             }
 
             return args;
+
+            async function _extractModel(options: any, type: Constructor<any>, req: express.Request)
+            {
+                if((type as any).find === undefined){
+                    throw new NotSupported(`${type.name} does not support method find, make sure its model type`);
+                }
+
+                const key = options.KeyName ?? "Id";
+                const pkVal = req.params[key] ?? req.query[key] ?? req.body[key];
+
+                if(!pkVal)
+                {
+                    throw new BadRequest(`key value invalid`);
+                }
+
+                return await (type as any).find.call(null, [pkVal]);
+            }
 
             async function _extractMultipart(options: any, req: express.Request, type: ParameterType) {
 
