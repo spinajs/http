@@ -16,7 +16,7 @@ module.exports = {
         dirs: {
             locales: [dir("./../locales")],
             views: [dir("./../views")],
-            controllers: [dir("./controllers")],
+            controllers: [dir("./../controllers")],
         }
     },
     http: {
@@ -56,7 +56,7 @@ module.exports = {
                 /**
                  * full path to folder with static content
                  */
-                Path: dir('/../../public'),
+                Path: dir('/../static'),
             },
         ],
 

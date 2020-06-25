@@ -59,7 +59,17 @@ export abstract class BaseController extends AsyncModule implements IController 
         for (const [, route] of this.Descriptor.Routes) {
             const handlers: express.RequestHandler[] = [];
             const action: RouteCallback = this[route.Method];
-            const path = route.Path ? `/${this.BasePath}/${route.Path}` : `/${this.BasePath}/${route.Method}`;
+            let path = "";
+            if (route.Path) {
+                if (route.Path === '/') {
+                    path = `/${this.BasePath}`;
+                } else {
+                    path = `/${this.BasePath}/${route.Path}`;
+                }
+            } else {
+                path = `/${this.BasePath}/${route.Method}`
+            }
+
             const middlewares = await Promise.all<BaseMiddleware>(
                 this.Descriptor.Middlewares.concat(route.Middlewares || [])
                     .map((m: IMiddlewareDescriptor) => {
@@ -75,9 +85,10 @@ export abstract class BaseController extends AsyncModule implements IController 
 
             this.Log.trace(`Registering route ${route.Method}:${path}`);
 
-            handlers.push(...policies.filter(p => p.isEnabled(route, this)).map(p => _invokePolicyAction(p.execute.bind(p), route)));
-            handlers.push(...middlewares.filter(m => m.isEnabled(route, this)).map(m => _invokeAction(m.onBeforeAction.bind(m))));
-            handlers.push(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+            handlers.push(...policies.filter(p => p.isEnabled(route, this)).map(p => _invokePolicyAction(p, p.execute.bind(p), route)));
+            handlers.push(...middlewares.filter(m => m.isEnabled(route, this)).map(m => _invokeAction(m, m.onBeforeAction.bind(m))));
+
+            const acionWrapper = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
                 try {
                     const args = (await _extractRouteArgs(route, req)).concat([req, res, next]);
@@ -87,15 +98,22 @@ export abstract class BaseController extends AsyncModule implements IController 
                     next(err);
                 }
 
-            });
-            handlers.push(...middlewares.filter(m => m.isEnabled(route, this)).map(m => _invokeAction(m.onAfterAction.bind(m))));
+            }
+
+            Object.defineProperty(acionWrapper, "name", {
+                value: this.constructor.name,
+                writable: true
+            });	      
+
+            handlers.push(acionWrapper);
+            handlers.push(...middlewares.filter(m => m.isEnabled(route, this)).map(m => _invokeAction(m, m.onAfterAction.bind(m))));
 
             // register to express router
             (this._router as any)[route.InternalType as string](path, handlers);
         }
 
-        function _invokeAction(action: any) {
-            return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+        function _invokeAction(source: any,action: any) {
+            const wrapper =  (req: express.Request, res: express.Response, next: express.NextFunction) => {
                 action(req, res)
                     .then(() => {
                         next();
@@ -104,10 +122,16 @@ export abstract class BaseController extends AsyncModule implements IController 
                         next(err);
                     });
             };
+
+            Object.defineProperty(wrapper, "name", {
+                value: source.constructor.name,
+                writable: true
+            });	            
+            return wrapper;
         }
 
-        function _invokePolicyAction(action: any, route: IRoute) {
-            return (req: express.Request, _res: express.Response, next: express.NextFunction) => {
+        function _invokePolicyAction(source: any, action: any, route: IRoute) {
+            const wrapper =  (req: express.Request, _res: express.Response, next: express.NextFunction) => {
                 action(req, route, this)
                     .then((result: boolean) => {
                         if (result === false) {
@@ -120,6 +144,13 @@ export abstract class BaseController extends AsyncModule implements IController 
                         next(err);
                     });
             };
+
+            Object.defineProperty(wrapper, "name", {
+                value: source.constructor.name,
+                writable: true
+            });
+
+            return wrapper;
         }
 
         async function _extractRouteArgs(route: IRoute, req: express.Request) {
@@ -192,17 +223,15 @@ export abstract class BaseController extends AsyncModule implements IController 
 
             return args;
 
-            async function _extractModel(options: any, type: Constructor<any>, req: express.Request)
-            {
-                if((type as any).find === undefined){
+            async function _extractModel(options: any, type: Constructor<any>, req: express.Request) {
+                if ((type as any).find === undefined) {
                     throw new NotSupported(`${type.name} does not support method find, make sure its model type`);
                 }
 
                 const key = options.KeyName ?? "Id";
                 const pkVal = req.params[key] ?? req.query[key] ?? req.body[key];
 
-                if(!pkVal)
-                {
+                if (!pkVal) {
                     throw new BadRequest(`key value invalid`);
                 }
 
@@ -278,7 +307,7 @@ export class Controllers extends AsyncModule {
 
             this.Log.trace(`Loading controller: ${controller.name}`);
 
-            const compiler = new TypescriptCompiler(controller.file);
+            const compiler = new TypescriptCompiler(controller.file.replace(".js", ".d.ts"));
             const members = compiler.getClassMembers(controller.name);
 
             for (const [name, route] of controller.instance.Descriptor.Routes) {

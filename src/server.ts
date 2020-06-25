@@ -45,7 +45,6 @@ export class HttpServer extends AsyncModule {
         /**
          * Register default middlewares from cfg
          */
-
         this.Configuration.get<any[]>('http.middlewares', []).forEach(m => {
             this.use(m);
         });
@@ -72,7 +71,6 @@ export class HttpServer extends AsyncModule {
      * Starts http server & express
      */
     public start() {
-
         // start http server & express
         const port = this.Configuration.get('http.port', 1337);
         return new Promise((res) => {
@@ -107,7 +105,8 @@ export class HttpServer extends AsyncModule {
      * Executes response
      */
     protected handleResponse() {
-        this.Express.use((req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
+
+        const wrapper = (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
             if (!res.locals.response) {
                 next(new ResourceNotFound(`Route not found ${req.method}:${req.originalUrl}`));
                 return;
@@ -118,15 +117,22 @@ export class HttpServer extends AsyncModule {
                     callback(req, res);
                 }
             });
-        });
+        };
+
+        Object.defineProperty(wrapper, "name", {
+            value: "handleResponse",
+            writable: true
+        });	   
+
+        this.Express.use(wrapper);
     }
 
     /**
      * Handles thrown exceptions in actions.
      */
     protected handleErrors() {
-        this.Express.use((err: any, req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
 
+        const wrapper = (err: any, req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
             if (!err) {
                 return next();
             }
@@ -147,32 +153,39 @@ export class HttpServer extends AsyncModule {
 
             switch (err.constructor) {
                 case AuthenticationFailed:
-                    response = new Unauthorized({ error: err });
+                    response = new Unauthorized({ error });
                     break;
                 case Forbidden:
-                    response = new ForbiddenResponse({ error: err });
+                    response = new ForbiddenResponse({ error });
                     break;
                 case InvalidArgument:
                 case BadRequest:
                 case ValidationFailed:
                 case JsonValidationFailed:
                 case ExpectedResponseUnacceptable:
-                    response = new BadRequestResponse({ error: err });
+                    response = new BadRequestResponse({ error });
                     break;
                 case ResourceNotFound:
-                    response = new NotFound({ error: err });
+                    response = new NotFound({ error });
                     break;
                 case UnexpectedServerError:
                 case IOFail:
                 case MethodNotImplemented:
                 default:
-                    response = new ServerError({ error: err });
+                    response = new ServerError({ error });
                     break;
             }
 
             response.execute(req, res).then((callback: ResponseFunction) => {
                 callback(req, res);
             });
-        });
+        };
+
+        Object.defineProperty(wrapper, "name", {
+            value: "handleError",
+            writable: true
+        });	  
+
+        this.Express.use(wrapper);
     }
 }
