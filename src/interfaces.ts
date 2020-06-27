@@ -189,6 +189,11 @@ export enum ParameterType {
    * From model object
    */
   FromModel,
+  
+  /**
+   * Data from coockie
+   */
+  FromCookie
 }
 
 export interface IUploadOptions {

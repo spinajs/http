@@ -3,6 +3,8 @@ const express = require('express');
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const compression = require("compression");
+const cors = require("cors");
+
 
 import { join, normalize, resolve } from 'path';
 import { HttpAcceptHeaders } from "../interfaces";
@@ -11,12 +13,29 @@ function dir(path: string) {
     return resolve(normalize(join(__dirname, path)));
 }
 
+const corsPath = resolve(normalize(join(process.cwd(), "cors.json")));
+const origins = require(corsPath);
+
+const corsOptions = {
+    origin(_: any, callback: any) {
+       callback(null, origins);
+    },
+    credentials: true
+}
+
 module.exports = {
     system: {
         dirs: {
             locales: [dir("./../locales")],
             views: [dir("./../views")],
             controllers: [dir("./../controllers")],
+        }
+    },
+    cookie: {
+        secret: "1234adreewD",
+        options: {
+            maxAge: 900000,
+            httpOnly: true
         }
     },
     http: {
@@ -31,6 +50,7 @@ module.exports = {
             }),
             cookieParser(),
             compression(),
+            cors(corsOptions),
         ],
 
         /**

@@ -7,9 +7,11 @@ import { ClassInfo, TypescriptCompiler, ResolveFromFiles } from "@spinajs/reflec
 import { HttpServer } from './server';
 import { Logger, Log } from '@spinajs/log';
 import { IncomingForm, Files, Fields } from "formidable";
+import * as cs from 'cookie-signature';
 
 // tslint:disable-next-line: no-var-requires
 import Ajv = require("ajv");
+import { Configuration } from '@spinajs/configuration';
 
 export abstract class BaseController extends AsyncModule implements IController {
 
@@ -103,7 +105,7 @@ export abstract class BaseController extends AsyncModule implements IController 
             Object.defineProperty(acionWrapper, "name", {
                 value: this.constructor.name,
                 writable: true
-            });	      
+            });
 
             handlers.push(acionWrapper);
             handlers.push(...middlewares.filter(m => m.isEnabled(route, this)).map(m => _invokeAction(m, m.onAfterAction.bind(m))));
@@ -112,9 +114,9 @@ export abstract class BaseController extends AsyncModule implements IController 
             (this._router as any)[route.InternalType as string](path, handlers);
         }
 
-        function _invokeAction(source: any,action: any) {
-            const wrapper =  (req: express.Request, res: express.Response, next: express.NextFunction) => {
-                action(req, res)
+        function _invokeAction(source: any, action: any) {
+            const wrapper = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+                action(req, res, self)
                     .then(() => {
                         next();
                     })
@@ -126,13 +128,13 @@ export abstract class BaseController extends AsyncModule implements IController 
             Object.defineProperty(wrapper, "name", {
                 value: source.constructor.name,
                 writable: true
-            });	            
+            });
             return wrapper;
         }
 
         function _invokePolicyAction(source: any, action: any, route: IRoute) {
-            const wrapper =  (req: express.Request, _res: express.Response, next: express.NextFunction) => {
-                action(req, route, this)
+            const wrapper = (req: express.Request, _res: express.Response, next: express.NextFunction) => {
+                action(req, route, self)
                     .then((result: boolean) => {
                         if (result === false) {
                             next(new Forbidden());
@@ -171,6 +173,9 @@ export abstract class BaseController extends AsyncModule implements IController 
                     case ParameterType.FromQuery:
                         source = req.query;
                         break;
+                    case ParameterType.FromCookie:
+                        source = req.cookies;
+                        break;
                     case ParameterType.FromModel:
                         source = await _extractModel(param.Options, param.RuntimeType, req);
                         break;
@@ -184,15 +189,22 @@ export abstract class BaseController extends AsyncModule implements IController 
 
                 // if parameter have name defined load it up
                 if (param.Name) {
-
                     // form fields goes to one
-                    if (param.Type === ParameterType.FromForm || param.Type === ParameterType.FromModel) {
+                    if (param.Type === ParameterType.FromCookie) {
+                        const secret = DI.get(Configuration).get<string>("http.cookie.secret");
+                        const val = source[param.Name];
+
+                        if (!val) {
+                            args[param.Index] = null;
+                        } else {
+                            args[param.Index] = cs.unsign(val, secret);
+                        }
+                    } else if (param.Type === ParameterType.FromForm || param.Type === ParameterType.FromModel) {
                         args[param.Index] = source;
                     } else if (param.RuntimeType.name.toLowerCase() === 'number') {
                         // query params are always sent as strings, even numbers,
                         // we must try to parse them as integers first
                         args[param.Index] = Number(source[param.Name]);
-
                     } else {
                         args[param.Index] = source[param.Name];
                     }

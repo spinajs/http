@@ -188,6 +188,16 @@ export function Model(model: Constructor<any>) {
 }
 
 /**
+ * 
+ * Parameter taken from model 
+ * 
+ * @param options upload options
+ */
+export function Cookie() {
+    return Route(Parameter(ParameterType.FromCookie, { type: "string" }));
+}
+
+/**
  * Creates HEAD http request method
  * @param path - url path to method eg. /foo/bar/:id
  */
