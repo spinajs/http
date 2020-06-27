@@ -5,15 +5,13 @@ import * as _ from 'lodash';
 import { getType } from 'mime';
 import { Response, ResponseFunction } from '../responses';
 
-
 export class FileResponse extends Response {
-
   protected path: string;
   protected filename: string;
   protected mimeType: string;
 
   /**
-   * Sends file to client at given path & filename. If file exists 
+   * Sends file to client at given path & filename. If file exists
    * it will send file with 200 OK, if not exists 404 NOT FOUND
    * @param path - server full path to file
    * @param filename - real filename send to client
@@ -52,4 +50,3 @@ export class FileResponse extends Response {
     });
   }
 }
-

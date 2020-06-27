@@ -9,7 +9,6 @@ import { httpResponse, Response, ResponseFunction } from '../responses';
  */
 
 export class Unauthorized extends Response {
-
   constructor(data: any) {
     super(data);
   }
@@ -18,6 +17,3 @@ export class Unauthorized extends Response {
     return httpResponse(this.responseData, HTTP_STATUS_CODE.UNAUTHORIZED, 'responses/unauthorized');
   }
 }
-
-
-

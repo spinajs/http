@@ -2,14 +2,12 @@ import * as express from 'express';
 import { HTTP_STATUS_CODE } from '../interfaces';
 import { httpResponse, Response, ResponseFunction } from '../responses';
 
-
 /**
  * Internall response function.
  * Returns HTTP 201 CREATED
  * @param data - additional data eg. model pk
  */
 export class Created extends Response {
-
   constructor(data: any) {
     super(data);
   }

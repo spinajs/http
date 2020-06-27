@@ -3,11 +3,10 @@ import { Response, ResponseFunction } from '../responses';
 
 /**
  * Redirects to another route ( simple alias for request.redirect for api consistency)
- * 
+ *
  * @param url - url path to another location
  */
 export class Redirect extends Response {
-
   protected url: string;
 
   constructor(url: any) {
@@ -22,5 +21,3 @@ export class Redirect extends Response {
     };
   }
 }
-
-

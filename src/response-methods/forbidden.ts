@@ -9,7 +9,6 @@ import { httpResponse, Response, ResponseFunction } from '../responses';
  */
 
 export class Forbidden extends Response {
-
   constructor(data: any) {
     super(data);
   }
@@ -18,5 +17,3 @@ export class Forbidden extends Response {
     return httpResponse(this.responseData, HTTP_STATUS_CODE.FORBIDDEN, 'responses/forbidden');
   }
 }
-
-

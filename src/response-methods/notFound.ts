@@ -8,7 +8,6 @@ import { httpResponse, Response, ResponseFunction } from '../responses';
  * @param err - error to send
  */
 export class NotFound extends Response {
-
   constructor(data: any) {
     super(data);
   }
@@ -17,4 +16,3 @@ export class NotFound extends Response {
     return httpResponse(this.responseData, HTTP_STATUS_CODE.NOT_FOUND, 'responses/notFound');
   }
 }
-

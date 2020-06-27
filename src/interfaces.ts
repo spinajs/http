@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { Constructor } from "@spinajs/di";
+import { Constructor } from '@spinajs/di';
 
 /**
  * Accept header enum
@@ -152,14 +152,13 @@ export enum RouteType {
    */
   FILE = 'file',
 
-  UNKNOWN = "unknown"
+  UNKNOWN = 'unknown',
 }
 
 /**
  * Avaible route parameters type
  */
 export enum ParameterType {
-
   /**
    * Parameter value is taken from query string eg. `?name=flavio`
    */
@@ -181,7 +180,7 @@ export enum ParameterType {
   FromFile,
 
   /**
-   * From form  
+   * From form
    */
   FromForm,
 
@@ -189,15 +188,14 @@ export enum ParameterType {
    * From model object
    */
   FromModel,
-  
+
   /**
    * Data from coockie
    */
-  FromCookie
+  FromCookie,
 }
 
 export interface IUploadOptions {
-
   /**
    * default 1000; limit the number of fields that the Querystring parser will decode, set 0 for unlimited
    */
@@ -320,7 +318,6 @@ export interface IRoute {
 }
 
 export interface IMiddlewareDescriptor {
-
   Type: Constructor<BaseMiddleware>;
 
   Options: any[];
@@ -339,7 +336,7 @@ export interface IController {
 
   /**
    * Base path for all controller routes eg. my/custom/path/
-   * 
+   *
    * It can be defined via `@BasePath` decorator, defaults to controller name without `Controller` part.
    */
   BasePath: string;
@@ -370,43 +367,38 @@ export abstract class BaseMiddleware {
  * Descriptor for policies eg. attached routes, passed options eg. token etc.
  */
 export interface IPolicyDescriptor {
-
   Type: Constructor<BasePolicy>;
 
   Options: any[];
 }
 
-
 /**
- * Base class for policies. 
- * 
+ * Base class for policies.
+ *
  * Policies checks if route can be executed eg. user have proper role
  */
 export abstract class BasePolicy {
-
   /**
    * Checks if policy is enabled for given action & controlle eg. user session exists
-   * 
+   *
    * @param action action that is executed ( route info )
    * @param instance controller instance
    */
   public abstract isEnabled(action: IRoute, instance: IController): boolean;
 
   /**
-   * 
+   *
    * Executes policy. When return false - access is not given, when true - route is executed
-   * 
+   *
    * @param req express request object
    */
   public abstract execute(req: express.Request, action: IRoute, instance: IController): Promise<boolean>;
-
 }
 
 /**
  * Descriptor for controller
  */
 export interface IControllerDescriptor {
-
   /**
    * Controller routes
    */
@@ -428,12 +420,8 @@ export interface IControllerDescriptor {
   BasePath: string;
 }
 
-
 export type RouteCallback = (
   req: express.Request,
   res: express.Response,
   next: express.NextFunction,
 ) => (req: express.Request, res: express.Response) => void;
-
-
-

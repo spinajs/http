@@ -9,7 +9,6 @@ import { httpResponse, Response, ResponseFunction } from '../responses';
  */
 
 export class ServerError extends Response {
-
   constructor(data: any) {
     super(data);
   }
@@ -18,5 +17,3 @@ export class ServerError extends Response {
     return httpResponse(this.responseData, HTTP_STATUS_CODE.INTERNAL_ERROR, 'responses/serverError');
   }
 }
-
-

@@ -9,7 +9,6 @@ import { httpResponse, Response, ResponseFunction } from '../responses';
  */
 
 export class BadRequest extends Response {
-
   constructor(data: any) {
     super(data);
   }
@@ -18,4 +17,3 @@ export class BadRequest extends Response {
     return httpResponse(this.responseData, HTTP_STATUS_CODE.BAD_REQUEST, 'responses/badRequest');
   }
 }
-

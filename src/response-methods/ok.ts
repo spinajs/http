@@ -8,7 +8,6 @@ import { httpResponse, Response, ResponseFunction } from '../responses';
  * @param data - data to send
  */
 export class Ok extends Response {
-
   constructor(data?: any) {
     super(data);
   }
@@ -17,4 +16,3 @@ export class Ok extends Response {
     return httpResponse(this.responseData, HTTP_STATUS_CODE.OK, 'responses/ok');
   }
 }
-

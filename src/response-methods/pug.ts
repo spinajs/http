@@ -6,7 +6,6 @@ import { Response, ResponseFunction, pugResponse } from '../responses';
  * HTML resposne with HTML from pug file
  */
 export class PugResponse extends Response {
-
   protected file: string;
   protected status: HTTP_STATUS_CODE = null;
 
@@ -21,4 +20,3 @@ export class PugResponse extends Response {
     return pugResponse(this.file, this.responseData, this.status ? this.status : HTTP_STATUS_CODE.OK);
   }
 }
-
