@@ -103,6 +103,11 @@ export enum HTTP_STATUS_CODE {
   NOT_ACCEPTABLE = 406,
 
   /**
+   * Conflict
+   */
+  CONFLICT = 409,
+
+  /**
    * Internal server error.
    */
   INTERNAL_ERROR = 500,
@@ -185,6 +190,11 @@ export enum ParameterType {
   FromForm,
 
   /**
+   * From form field
+   */
+  FormField,
+
+  /**
    * From model object
    */
   FromModel,
@@ -193,6 +203,14 @@ export enum ParameterType {
    * Data from coockie
    */
   FromCookie,
+
+  /**
+   * Req from express
+   */
+  Req,
+
+  // Res from express
+  Res
 }
 
 export interface IUploadOptions {
@@ -392,7 +410,7 @@ export abstract class BasePolicy {
    *
    * @param req express request object
    */
-  public abstract execute(req: express.Request, action: IRoute, instance: IController): Promise<boolean>;
+  public abstract execute(req: express.Request, action: IRoute, instance: IController): Promise<void>;
 }
 
 /**

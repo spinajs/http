@@ -19,6 +19,7 @@ import {
   ResourceNotFound,
   IOFail,
   MethodNotImplemented,
+  ResourceDuplicated,
 } from '@spinajs/exceptions';
 import {
   Unauthorized,
@@ -26,6 +27,7 @@ import {
   ServerError,
   BadRequest as BadRequestResponse,
   Forbidden as ForbiddenResponse,
+  Conflict,
 } from './response-methods';
 import Express = require('express');
 
@@ -148,8 +150,7 @@ export class HttpServer extends AsyncModule {
       this.Log.error(`Route error: ${err}, stack: ${err.stack}`, err.parameter);
 
       const error = {
-        message: err.message,
-        parameters: err.parameter,
+        ...err,
         stack: {},
       };
 
@@ -165,7 +166,10 @@ export class HttpServer extends AsyncModule {
           break;
         case Forbidden:
           response = new ForbiddenResponse({ error });
-          break;
+        break;
+        case ResourceDuplicated:
+          response = new Conflict({error});
+        break;
         case InvalidArgument:
         case BadRequest:
         case ValidationFailed:

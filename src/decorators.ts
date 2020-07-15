@@ -190,6 +190,16 @@ export function Form(schema?: any) {
 
 /**
  *
+ * Parameter taken from form data (multipart-form)
+ *
+ * @param options upload options
+ */
+export function FormField() {
+  return Route(Parameter(ParameterType.FormField, null));
+}
+
+/**
+ *
  * Shortcut for parameter as autoincrement primary key ( number greater than 0)
  *
  */
@@ -204,6 +214,24 @@ export function IncPkey() {
  */
 export function UuidPkey() {
   return Route(Parameter(ParameterType.FromParams, { type: 'string', minLength: 32, maxLength: 32 }));
+}
+
+/**
+ *
+ *  Express request
+ *
+ */
+export function Req() {
+  return Route(Parameter(ParameterType.Req, null));
+}
+
+/**
+ *
+ *  Express res
+ *
+ */
+export function Res() {
+  return Route(Parameter(ParameterType.Res, null));
 }
 
 /**

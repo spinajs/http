@@ -31,14 +31,8 @@ export class FileResponse extends Response {
 
   public async execute(_req: express.Request, res: express.Response): Promise<ResponseFunction> {
     return new Promise((resolve, reject) => {
-      res.sendFile(
+      res.download(
         this.path,
-        {
-          headers: {
-            'Content-Disposition': `attachment; filename="${this.filename}"`,
-            'Content-Type': this.mimeType,
-          },
-        },
         (err: Error) => {
           if (!_.isNil(err)) {
             reject(err);

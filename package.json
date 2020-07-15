@@ -1,6 +1,6 @@
 {
   "name": "@spinajs/http",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "framework http & controller module",
   "main": "lib/index.js",
   "private": false,
@@ -37,9 +37,10 @@
   },
   "homepage": "https://github.com/spinajs/http#readme",
   "dependencies": {
-    "@spinajs/di": "^1.0.17",
+    "@spinajs/di": "^1.0.19",
     "@spinajs/intl": "^1.0.1",
     "ajv": "^6.12.2",
+    "ajv-merge-patch": "^4.1.0",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.5",
     "cookie-signature": "^1.1.0",

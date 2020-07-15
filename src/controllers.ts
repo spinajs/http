@@ -12,16 +12,14 @@ import {
 import { AsyncModule, IContainer, Autoinject, DI } from '@spinajs/di';
 import * as express from 'express';
 import { CONTROLLED_DESCRIPTOR_SYMBOL, SCHEMA_SYMBOL } from './decorators';
-import { ValidationFailed, UnexpectedServerError, Forbidden, BadRequest, NotSupported } from '@spinajs/exceptions';
+import { ValidationFailed, UnexpectedServerError, BadRequest, NotSupported } from '@spinajs/exceptions';
 import { ClassInfo, TypescriptCompiler, ResolveFromFiles } from '@spinajs/reflection';
 import { HttpServer } from './server';
 import { Logger, Log } from '@spinajs/log';
 import { IncomingForm, Files, Fields } from 'formidable';
 import * as cs from 'cookie-signature';
-
-// tslint:disable-next-line: no-var-requires
-import Ajv = require('ajv');
 import { Configuration } from '@spinajs/configuration';
+import { DataValidator } from './schemas';
 
 export abstract class BaseController extends AsyncModule implements IController {
   /**
@@ -101,7 +99,7 @@ export abstract class BaseController extends AsyncModule implements IController 
 
       const acionWrapper = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
-          const args = (await _extractRouteArgs(route, req)).concat([req, res, next]);
+          const args = (await _extractRouteArgs(route, req, res)).concat([req, res, next]);
           res.locals.response = await action.call(this, ...args);
           next();
         } catch (err) {
@@ -144,14 +142,11 @@ export abstract class BaseController extends AsyncModule implements IController 
     function _invokePolicyAction(source: any, action: any, route: IRoute) {
       const wrapper = (req: express.Request, _res: express.Response, next: express.NextFunction) => {
         action(req, route, self)
-          .then((result: boolean) => {
-            if (result === false) {
-              next(new Forbidden());
-            } else {
-              next();
-            }
-          })
+          .then(next)
           .catch((err: any) => {
+
+            self.Log.trace(`route ${self.constructor.name}:${route.Method} ${self.BasePath}${route.Path} error ${err}, policy: ${source.constructor.name}`);
+
             next(err);
           });
       };
@@ -164,7 +159,7 @@ export abstract class BaseController extends AsyncModule implements IController 
       return wrapper;
     }
 
-    async function _extractRouteArgs(route: IRoute, req: express.Request) {
+    async function _extractRouteArgs(route: IRoute, req: express.Request, res: express.Response) {
       const args = new Array<any>(route.Parameters.size);
       let multipartsCache: { fields: Fields; files: Files } = null;
 
@@ -187,12 +182,17 @@ export abstract class BaseController extends AsyncModule implements IController 
           case ParameterType.FromModel:
             source = await _extractModel(param.Options, param.RuntimeType, req);
             break;
+          case ParameterType.FormField:
           case ParameterType.FromFile:
-            source = await _extractMultipart(param.Options, req, param.Type);
-            break;
           case ParameterType.FromForm:
             source = await _extractMultipart(param.Options, req, param.Type);
             break;
+          case ParameterType.Res:
+            args[param.Index] = res;
+            continue;
+          case ParameterType.Req:
+            args[param.Index] = req;
+            continue;
         }
 
         // if parameter have name defined load it up
@@ -207,12 +207,11 @@ export abstract class BaseController extends AsyncModule implements IController 
             } else {
               args[param.Index] = cs.unsign(val, secret);
             }
-          } else if (param.Type === ParameterType.FromForm || param.Type === ParameterType.FromModel) {
+          } else if (param.Type === ParameterType.FromFile) {
+            args[param.Index] = source[param.Name];
+          }
+          else if (param.Type === ParameterType.FromForm || param.Type === ParameterType.FromModel) {
             args[param.Index] = source;
-          } else if (param.RuntimeType.name.toLowerCase() === 'number') {
-            // query params are always sent as strings, even numbers,
-            // we must try to parse them as integers first
-            args[param.Index] = Number(source[param.Name]);
           } else {
             args[param.Index] = source[param.Name];
           }
@@ -222,20 +221,54 @@ export abstract class BaseController extends AsyncModule implements IController 
         }
 
         const dtoSchema = Reflect.getMetadata(SCHEMA_SYMBOL, param.RuntimeType);
-        const schema = dtoSchema ?? param.Schema;
+        let schema = dtoSchema ?? param.Schema;
+
+        // try gues schema if one of basic type
+        if (!schema) {
+          switch (param.RuntimeType.name) {
+            case "Number":
+              schema = {
+                type: "number"
+              }
+              break;
+            case "String":
+              schema = {
+                type: "string",
+                maxLength: 512
+              }
+              break;
+            case "Boolean":
+              schema = {
+                type: "boolean"
+              }
+              break;
+          }
+        }
+
+        // query params are always sent as strings, even numbers,
+        // we must try to parse them as integers / booleans first
+        if (param.RuntimeType.name === 'Number') {
+          args[param.Index] = Number((args as any)[param.Index]);
+        }
+        if (param.RuntimeType.name === 'Boolean' && typeof args[param.Index] === "string") {
+          args[param.Index] = args[param.Index] === "true" ? true : false;
+        }
 
         if (schema) {
-          const validator = await self.Container.resolve<any>('ControllerValidator');
+          const validator = await self.Container.resolve<DataValidator>(DataValidator);
           if (!validator) {
             throw new UnexpectedServerError('validation service is not avaible');
           }
 
           const result = validator.validate(schema, args[param.Index]);
-          if (!result) {
-            throw new ValidationFailed(`parameter validation error`, {
-              param: param.Name,
-              errors: validator.errors,
-            });
+          if (!result.valid) {
+            if (schema.required || schema.required === undefined) {
+              throw new ValidationFailed(`parameter validation error ${param.Name}`, {
+                param: param.Name,
+                errors: result.errors,
+              });
+            }
+
           }
         }
       }
@@ -266,6 +299,7 @@ export abstract class BaseController extends AsyncModule implements IController 
           case ParameterType.FromFile:
             return multipartsCache.files;
           case ParameterType.FromForm:
+          case ParameterType.FormField:
             return multipartsCache.fields;
         }
 
@@ -310,11 +344,9 @@ export class Controllers extends AsyncModule {
      * globally register controller validator, we use ajv lib
      * we use factory func register as singlegon
      */
-    DI.register(() => {
-      return new Ajv();
-    })
-      .as('ControllerValidator')
-      .singleInstance();
+    
+    DI.register(DataValidator).asSelf().singleInstance();
+ 
 
     // extract parameters info from controllers source code & register in http server
     for (const controller of await this.Controllers) {

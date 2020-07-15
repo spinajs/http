@@ -16,8 +16,12 @@ const corsPath = resolve(normalize(join(process.cwd(), 'cors.json')));
 const origins = require(corsPath);
 
 const corsOptions = {
-  origin(_: any, callback: any) {
-    callback(null, origins);
+  origin(origin: any, callback: any) {
+    if (!origins || origins.length === 0 || origins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+        callback(new Error("cors not allowed"));
+    }
   },
   credentials: true,
 };
