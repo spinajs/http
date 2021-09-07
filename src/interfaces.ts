@@ -464,14 +464,14 @@ export interface IControllerDescriptor {
  * to easily transform data for some client
  * eg. plain array to format that datatables.net can easily read
  */
-export abstract class DataTransformer {
+export abstract class DataTransformer<T, U> {
 
   /**
    * Transforms data from one format to another
    * 
    * @param data input data
    */
-  public abstract format(data: any): any
+  public abstract transform(data: T, request: Express.Request): U
 }
 
 export type RouteCallback = (
