@@ -1,4 +1,4 @@
-import { PureDataTransformer } from './transformers/PureFormatter';
+import { PureDataTransformer } from './transformers/PureTransformer';
 import { ResponseFunction } from './responses';
 
 import { AsyncModule, IContainer, Autoinject, Injectable } from '@spinajs/di';

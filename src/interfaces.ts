@@ -471,7 +471,9 @@ export abstract class DataTransformer<T, U> {
    * 
    * @param data input data
    */
-  public abstract transform(data: T, request: Express.Request): U
+  public abstract transform(data: T, request: express.Request): U
+
+  public abstract get Type() : string;
 }
 
 export type RouteCallback = (

@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { HTTP_STATUS_CODE, HttpAcceptHeaders } from './interfaces';
+import { HTTP_STATUS_CODE, HttpAcceptHeaders, DataTransformer } from './interfaces';
 import { Configuration } from '@spinajs/configuration';
 import { DI } from '@spinajs/di';
 import { LogModule, Log } from '@spinajs/log';
@@ -188,12 +188,21 @@ export function pugResponse(file: string, model: any, status?: HTTP_STATUS_CODE)
 export function httpResponse(model: any, code: HTTP_STATUS_CODE, template: string) {
   const cfg: Configuration = DI.resolve(Configuration);
   const acceptedHeaders = cfg.get<HttpAcceptHeaders>('http.AcceptHeaders');
+  const transformers = DI.resolve(Array.ofType(DataTransformer));
 
   return (req: express.Request, res: express.Response) => {
     if (req.accepts('html') && (acceptedHeaders & HttpAcceptHeaders.HTML) === HttpAcceptHeaders.HTML) {
       pugResponse(`${template}.pug`, model, code)(req, res);
     } else if (req.accepts('json') && (acceptedHeaders & HttpAcceptHeaders.JSON) === HttpAcceptHeaders.JSON) {
-      jsonResponse(model, code)(req, res);
+
+      if (req.headers['x-data-transform']) {
+        const transformer = transformers.find(x => x.Type === req.headers['X-data-transform'])
+        if (transformer) {
+          jsonResponse(transformer.transform(model, req), code)(req, res);
+        }
+      } else {
+        jsonResponse(model, code)(req, res);
+      }
     } else {
       textResponse(model, code)(req, res);
     }
