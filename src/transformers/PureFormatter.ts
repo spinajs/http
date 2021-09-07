@@ -6,7 +6,7 @@ import { Singleton } from "@spinajs/di";
  */
 @Singleton()
 export class PureDataTransformer extends DataTransformer {
-    public format(data: any) {
+    public transform(data: any) {
         return data;
     }
 }
