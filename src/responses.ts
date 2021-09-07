@@ -196,8 +196,10 @@ export function httpResponse(model: any, code: HTTP_STATUS_CODE, template: strin
     } else if (req.accepts('json') && (acceptedHeaders & HttpAcceptHeaders.JSON) === HttpAcceptHeaders.JSON) {
 
       if (req.headers['x-data-transform']) {
-        const transformer = transformers.find(x => x.Type === req.headers['X-data-transform'])
+        const transformer = transformers.find(x => x.Type === req.headers['x-data-transform'])
         if (transformer) {
+          jsonResponse(transformer.transform(model, req), code)(req, res);
+        } else {
           jsonResponse(transformer.transform(model, req), code)(req, res);
         }
       } else {
