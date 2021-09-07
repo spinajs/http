@@ -182,6 +182,9 @@ export abstract class BaseController extends AsyncModule implements IController 
           case ParameterType.FromModel:
             source = await _extractModel(param.Options, param.RuntimeType, req);
             break;
+          case ParameterType.FromDi:
+            source = await _inject(param.RuntimeType, param.Options);
+            break;
           case ParameterType.FormField:
           case ParameterType.FromFile:
           case ParameterType.FromForm:
@@ -208,7 +211,18 @@ export abstract class BaseController extends AsyncModule implements IController 
               args[param.Index] = cs.unsign(val, secret);
             }
           } else if (param.Type === ParameterType.FromFile) {
-            args[param.Index] = source[param.Name];
+
+            // map from formidable to our object
+            // of type IUploadedFile
+            const sourceFile = source[param.Name];
+            args[param.Index] = {
+              Size: sourceFile.size,
+              Path: sourceFile.path,
+              Name: sourceFile.name,
+              Type: sourceFile.type,
+              LastModifiedDate: sourceFile.lastModifiedDate,
+              Hash: sourceFile.hash
+            }
           }
           else if (param.Type === ParameterType.FromForm || param.Type === ParameterType.FromModel) {
             args[param.Index] = source;
@@ -274,6 +288,10 @@ export abstract class BaseController extends AsyncModule implements IController 
       }
 
       return args;
+
+      async function _inject(type: Constructor<any>, options: any) {
+        return await self.Container.resolve(type, options)
+      }
 
       async function _extractModel(options: any, type: Constructor<any>, req: express.Request) {
         if ((type as any).find === undefined) {
@@ -344,9 +362,9 @@ export class Controllers extends AsyncModule {
      * globally register controller validator, we use ajv lib
      * we use factory func register as singlegon
      */
-    
+
     DI.register(DataValidator).asSelf().singleInstance();
- 
+
 
     // extract parameters info from controllers source code & register in http server
     for (const controller of await this.Controllers) {

@@ -9,9 +9,7 @@ export class SamplePolicy extends BasePolicy
         return true;
     }   
     
-    public async execute(_req: Request): Promise<boolean> {
-
+    public async execute(_req: Request): Promise<void> {
         SamplePolicy.Called = true;
-        return true;
     }
 }

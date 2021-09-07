@@ -271,6 +271,7 @@ describe("http & controller tests", function () {
         });
         expect(Test.ParamsFile).to.be.not.undefined;
         expect(Test.ParamsFile).to.be.not.null;
+        expect(Test.ParamsFile.Name).to.eq("index.html");
     });
 
     it("should response with file", async () => {
@@ -293,4 +294,15 @@ describe("http & controller tests", function () {
         response = await req().post("sample-controller/v1/testValidation2").send({ data: { id: "ddd" } });
         expect(response).to.have.status(400);
     });
+
+    it("should inject service as parameter", async() => {
+        const response = await req().get("sample-controller/v1/testInject");
+
+        expect(Test.SomeService).to.be.not.undefined;
+        expect(Test.SomeService).to.be.not.null;
+        expect(Test.SomeService.SomeValue).to.eq("constructed");
+
+
+        expect(response).to.have.status(200);
+    })
 });

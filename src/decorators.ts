@@ -82,7 +82,7 @@ function Route(
   );
 }
 
-function Parameter(type: ParameterType, schema: any, options?: any) {
+function Parameter(type: ParameterType, schema?: any, options?: any) {
   return (_: IControllerDescriptor, route: IRoute, target: any, propertyKey: string, index: number) => {
     const param: IRouteParameter = {
       Index: index,
@@ -135,6 +135,10 @@ export function BasePath(path: string) {
   return Controller((metadata: IControllerDescriptor) => {
     metadata.BasePath = path;
   });
+}
+
+export function Inject() { 
+  return Route(Parameter(ParameterType.FromDi));
 }
 
 /**

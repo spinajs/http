@@ -1,3 +1,4 @@
+import { PureDataTransformer } from './transformers/PureFormatter';
 import { ResponseFunction } from './responses';
 
 import { AsyncModule, IContainer, Autoinject, Injectable } from '@spinajs/di';
@@ -5,7 +6,7 @@ import { Configuration } from '@spinajs/configuration';
 import { Logger, Log } from '@spinajs/log';
 import { Server } from 'http';
 import { RequestHandler } from 'express';
-import { IHttpStaticFileConfiguration } from './interfaces';
+import { IHttpStaticFileConfiguration, DataTransformer } from './interfaces';
 import * as fs from 'fs';
 import {
   UnexpectedServerError,
@@ -56,7 +57,7 @@ export class HttpServer extends AsyncModule {
     super();
   }
 
-  public async resolveAsync(_container: IContainer): Promise<void> {
+  public async resolveAsync(container: IContainer): Promise<void> {
     this.Express = Express();
 
     /**
@@ -77,6 +78,8 @@ export class HttpServer extends AsyncModule {
 
       this.Log.info(`Serving static content from: ${s.Path} at prefix: ${s.Route}`);
       this.Express.use(s.Route, Express.static(s.Path));
+
+      container.register(PureDataTransformer).as(DataTransformer);
     });
   }
 
@@ -166,10 +169,10 @@ export class HttpServer extends AsyncModule {
           break;
         case Forbidden:
           response = new ForbiddenResponse({ error });
-        break;
+          break;
         case ResourceDuplicated:
-          response = new Conflict({error});
-        break;
+          response = new Conflict({ error });
+          break;
         case InvalidArgument:
         case BadRequest:
         case ValidationFailed:

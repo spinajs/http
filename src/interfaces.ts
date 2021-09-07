@@ -42,6 +42,18 @@ export interface IHttpStaticFileConfiguration {
 }
 
 /**
+ * Uploaded file fields
+ */
+export interface IUploadedFile {
+  Size: number;
+  Path: string;
+  Name: string;
+  Type: string;
+  LastModifiedDate?: Date;
+  Hash?: string;
+}
+
+/**
  * HTTP response statuses
  */
 export enum HTTP_STATUS_CODE {
@@ -164,6 +176,12 @@ export enum RouteType {
  * Avaible route parameters type
  */
 export enum ParameterType {
+
+  /**
+   * Parameter is injected from DI container & resolved
+   */
+  FromDi,
+
   /**
    * Parameter value is taken from query string eg. `?name=flavio`
    */
@@ -406,7 +424,7 @@ export abstract class BasePolicy {
 
   /**
    *
-   * Executes policy. When return false - access is not given, when true - route is executed
+   * Executes policy, when throws exception - route is not executed
    *
    * @param req express request object
    */
@@ -436,6 +454,24 @@ export interface IControllerDescriptor {
    * Base url path for controller ( added for all child url's)
    */
   BasePath: string;
+}
+
+/**
+ * Base class for data transformers.
+ * 
+ * Data formatter helps transforms data for desired format. 
+ * Eg. we have API function that returns some data, but we want
+ * to easily transform data for some client
+ * eg. plain array to format that datatables.net can easily read
+ */
+export abstract class DataTransformer {
+
+  /**
+   * Transforms data from one format to another
+   * 
+   * @param data input data
+   */
+  public abstract format(data: any): any
 }
 
 export type RouteCallback = (

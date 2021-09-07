@@ -1,8 +1,10 @@
+import { IUploadedFile } from './../../src/interfaces';
 import { PugResponse, Query, Body, Param, Form, Upload, FileResponse } from './../../src';
 import { ServerError } from './../../src';
 import { BaseController, BasePath, Get, Post, Head, Patch, Del, Put, Ok } from "../../src";
 import { join, normalize, resolve } from 'path';
-import { File } from "formidable";
+import { Inject } from '@spinajs/di';
+import { SomeService } from '../service/SomeService';
 
 @BasePath("sample-controller/v1")
 export class Test extends BaseController {
@@ -12,7 +14,8 @@ export class Test extends BaseController {
 
     public static ParamsMultiForm: any;
     public static ParamsForm: any;
-    public static ParamsFile: any;
+    public static ParamsFile: IUploadedFile;
+    public static SomeService : SomeService;
 
 
     @Get()
@@ -104,7 +107,7 @@ export class Test extends BaseController {
     }
 
     @Post()
-    public testMultipartForm(@Form() contact: any, @Upload({}) index: File) {
+    public testMultipartForm(@Form() contact: any, @Upload({}) index: IUploadedFile) {
 
         Test.ParamsMultiForm = contact;
         Test.ParamsFile = index;
@@ -124,6 +127,14 @@ export class Test extends BaseController {
         return new Ok({
             id
         });
+    }
+
+    @Get()
+    public testInject(@Inject() someService : SomeService)
+    {
+        this.SomeService = someService;
+
+        return new Ok();
     }
 
     @Post()
