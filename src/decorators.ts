@@ -6,7 +6,6 @@ import {
   BasePolicy,
   BaseMiddleware,
   IRoute,
-  IFormOptions,
   IUploadOptions,
 } from './interfaces';
 
