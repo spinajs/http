@@ -324,12 +324,12 @@ export abstract class BaseController extends AsyncModule implements IController 
             return multipartsCache.fields;
         }
 
-        function _parse(): Promise<{ fields: Fields; files: Files }> {
+        async function  _parse(): Promise<{ fields: Fields; files: Files }> {
 
           const formOptions = options;
           
           if (options.uploadDir && isFunction(options.uploadDir)) {
-            formOptions.uploadDir = options.uploadDir();
+            formOptions.uploadDir = await options.uploadDir();
           }
 
           const form = new IncomingForm(formOptions);
