@@ -1,3 +1,4 @@
+import { IUploadOptions } from './interfaces';
 import * as express from 'express';
 import { Constructor } from '@spinajs/di';
 
@@ -231,7 +232,7 @@ export enum ParameterType {
   Res
 }
 
-export interface IUploadOptions {
+export interface IFormOptions {
   /**
    * default 1000; limit the number of fields that the Querystring parser will decode, set 0 for unlimited
    */
@@ -243,20 +244,11 @@ export interface IUploadOptions {
   maxFieldsSize?: number;
 
   /**
-   *  default 200 * 1024 * 1024 (200mb); limit the size of uploaded file.
-   */
-  maxFileSize?: number;
-
-  /**
-   * default false; to include the extensions of the original files or not
-   */
-  keepExtensions?: boolean;
-
-  /**
    * default 'utf-8'; sets encoding for incoming form fields,
    */
   encoding?: string;
-
+}
+export interface IUploadOptions {
   /**
    * default false; include checksums calculated for incoming files, set this to some hash algorithm, see crypto.createHash for available algorithms
    */
@@ -265,7 +257,7 @@ export interface IUploadOptions {
   /**
    * default os.tmpdir(); the directory for placing file uploads in. You can move them later by using fs.rename()
    */
-  uploadDir?: string;
+  uploadDir?: string | (() => string);
 
   /**
    * default false; when you call the .parse method, the files argument (of the callback) will contain arrays of files for inputs which submit multiple files using the HTML5 multiple attribute. Also, the fields argument will contain arrays of values for fields that have names ending with '[]'.
@@ -273,6 +265,16 @@ export interface IUploadOptions {
   multiples?: boolean;
 
   enabledPlugins?: string[];
+
+  /**
+*  default 200 * 1024 * 1024 (200mb); limit the size of uploaded file.
+*/
+  maxFileSize?: number;
+
+  /**
+   * default false; to include the extensions of the original files or not
+   */
+  keepExtensions?: boolean;
 }
 
 /**
@@ -473,7 +475,7 @@ export abstract class DataTransformer<T, U> {
    */
   public abstract transform(data: T, request: express.Request): U
 
-  public abstract get Type() : string;
+  public abstract get Type(): string;
 }
 
 export type RouteCallback = (

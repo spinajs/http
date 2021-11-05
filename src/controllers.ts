@@ -8,6 +8,8 @@ import {
   RouteCallback,
   IMiddlewareDescriptor,
   BasePolicy,
+  IFormOptions,
+  IUploadOptions
 } from './interfaces';
 import { AsyncModule, IContainer, Autoinject, DI } from '@spinajs/di';
 import * as express from 'express';
@@ -16,10 +18,11 @@ import { ValidationFailed, UnexpectedServerError, BadRequest, NotSupported } fro
 import { ClassInfo, TypescriptCompiler, ResolveFromFiles } from '@spinajs/reflection';
 import { HttpServer } from './server';
 import { Logger, Log } from '@spinajs/log';
-import { IncomingForm, Files, Fields } from 'formidable';
+import { IncomingForm, Files, Fields, Fields } from 'formidable';
 import * as cs from 'cookie-signature';
 import { Configuration } from '@spinajs/configuration';
 import { DataValidator } from './schemas';
+import { isFunction } from 'lodash';
 
 export abstract class BaseController extends AsyncModule implements IController {
   /**
@@ -322,7 +325,14 @@ export abstract class BaseController extends AsyncModule implements IController 
         }
 
         function _parse(): Promise<{ fields: Fields; files: Files }> {
-          const form = new IncomingForm(options);
+
+          const formOptions = options;
+          
+          if (options.uploadDir && isFunction(options.uploadDir)) {
+            formOptions.uploadDir = options.uploadDir();
+          }
+
+          const form = new IncomingForm(formOptions);
 
           return new Promise((res, rej) => {
             form.parse(req, (err: any, fields: Fields, files: Files) => {
