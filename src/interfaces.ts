@@ -1,4 +1,3 @@
-import { IUploadOptions } from './interfaces';
 import * as express from 'express';
 import { Constructor } from '@spinajs/di';
 
