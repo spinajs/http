@@ -327,7 +327,8 @@ export abstract class BaseController extends AsyncModule implements IController 
           const formOptions = options;
           
           if (options.uploadDir && isFunction(options.uploadDir)) {
-            formOptions.uploadDir = await options.uploadDir();
+            const cfg = DI.resolve(Configuration);
+            formOptions.uploadDir = await options.uploadDir(cfg);
           }
 
           const form = new IncomingForm(formOptions);

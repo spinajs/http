@@ -1,6 +1,6 @@
 {
   "name": "@spinajs/http",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "framework http & controller module",
   "main": "lib/index.js",
   "private": false,
