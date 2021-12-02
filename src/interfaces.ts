@@ -209,6 +209,16 @@ export enum ParameterType {
   FromForm,
 
   /**
+   * From cvs file
+   */
+   FromCSV,
+
+   /**
+    * From JSON file
+    */
+   FromJSONFile,
+
+  /**
    * From form field
    */
   FormField,

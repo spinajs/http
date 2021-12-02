@@ -103,6 +103,16 @@ export class FromFile extends FromFormBase  {
             Args: file
         }
     }
+}
+
+@Injectable(RouteArgs)
+export class JsonFile extends FromFile{
+
+}
+
+
+@Injectable(RouteArgs)
+export class CsvFile extends FromFile{
 
 }
 

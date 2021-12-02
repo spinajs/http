@@ -137,7 +137,7 @@ export function BasePath(path: string) {
   });
 }
 
-export function Inject() { 
+export function Inject() {
   return Route(Parameter(ParameterType.FromDi));
 }
 
@@ -178,8 +178,33 @@ export function FromModel(schema?: any) {
  *
  * @param options upload options
  */
-export function Upload(options?: IUploadOptions) {
+export function File(options?: IUploadOptions) {
   return Route(Parameter(ParameterType.FromFile, null, options));
+}
+
+/**
+ * Data taken from cvs file that is uploaded. Actions receives parsed data
+ * 
+ * @param options 
+ * @param cvsParseOptions 
+ * @param schema 
+ */
+export function CsvFile(options: IUploadOptions, cvsParseOptions?: any, schema?: any) {
+  return Route(Parameter(ParameterType.FromCSV, schema, {
+    uploadOptions: options,
+    cvsOptions: cvsParseOptions
+  }));
+}
+
+/**
+ * Data taken from cvs file that is uploaded. Actions receives parsed data
+ * 
+ * @param options 
+ * @param cvsParseOptions 
+ * @param schema 
+ */
+export function JsonFile(options: IUploadOptions, schema?: any) {
+  return Route(Parameter(ParameterType.FromJSONFile, schema, options));
 }
 
 /**
