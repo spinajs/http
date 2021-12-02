@@ -295,7 +295,7 @@ export abstract class BaseController extends AsyncModule implements IController 
       }
 
       async function _extractModel(options: any, type: Constructor<any>, req: express.Request) {
-        if ((type as any).find === undefined) {
+        if ((type as any).get === undefined) {
           throw new NotSupported(`${type.name} does not support method find, make sure its model type`);
         }
 
@@ -306,7 +306,7 @@ export abstract class BaseController extends AsyncModule implements IController 
           throw new BadRequest(`key value invalid`);
         }
 
-        return await (type as any).find.call(null, [pkVal]);
+        return await (type as any).get.call(null, [pkVal]);
       }
 
       async function _extractMultipart(options: any, req: express.Request, type: ParameterType) {

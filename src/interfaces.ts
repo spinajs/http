@@ -312,6 +312,15 @@ export interface IRouteParameter {
   Name: string;
 }
 
+/**
+ * Route action call spefici data. Used to pass data / arguments when parsing 
+ * action parameters for specific call. Eg. to parse form data, and extract it
+ * as different arguments.
+ */
+export interface IRouteCall {
+  Payload: any
+}
+
 export interface IRoute {
   /**
    * url path eg. /foo/bar/:id
