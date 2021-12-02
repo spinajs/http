@@ -1,8 +1,10 @@
-import { IRouteArgs } from "./RouteArgs";
+import { RouteArgs } from "./RouteArgs";
 import { IRouteParameter, ParameterType, IRouteCall } from "../interfaces";
 import * as express from 'express';
+import { Injectable } from "@spinajs/di";
 
-export class FromParams implements IRouteArgs {
+@Injectable(RouteArgs)
+export class FromParams extends RouteArgs {
     public get SupportedType(): ParameterType {
         return ParameterType.FromParams;
     }

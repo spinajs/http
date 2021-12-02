@@ -1,17 +1,20 @@
-import { IRouteArgs } from "./RouteArgs";
+import { RouteArgs } from "./RouteArgs";
 import { IRouteParameter, ParameterType, IRouteCall } from "../interfaces";
 import * as express from 'express';
-import { Inject } from "@spinajs/di";
+import { Inject, Injectable } from "@spinajs/di";
 import { Configuration } from "@spinajs/configuration";
 import * as cs from 'cookie-signature';
 
 @Inject(Configuration)
-export class FromCoockie implements IRouteArgs {
+@Injectable(RouteArgs)
+export class FromCoockie extends RouteArgs {
 
     protected _coockieSecret: string;
 
 
     constructor(cfg: Configuration) {
+        super();
+
         this._coockieSecret = cfg.get<string>("http.coockie.secret");
     }
 
@@ -34,7 +37,7 @@ export class FromCoockie implements IRouteArgs {
             return { CallData: callData, Args: result };
 
         }
-        
+
         return { CallData: callData, Args: null };
     }
 

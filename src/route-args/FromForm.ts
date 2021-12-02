@@ -1,10 +1,10 @@
-import { IRouteArgs } from "./RouteArgs";
+import { RouteArgs } from "./RouteArgs";
 import { IRouteParameter, ParameterType, IRouteCall } from "../interfaces";
 import * as express from 'express';
 import { Fields, Files, IncomingForm } from "formidable";
 import { Configuration } from "@spinajs/configuration";
 import { isFunction } from "lodash";
-import { DI } from "@spinajs/di";
+import { DI, Injectable } from "@spinajs/di";
 
 interface FormData {
     Fields: Fields;
@@ -25,7 +25,7 @@ export interface FormOptions {
     type?: string;
 }
 
-export class FromFormBase {
+export abstract class FromFormBase extends RouteArgs {
     protected Data: FormData;
 
     protected async parseForm(callData: IRouteCall, param: IRouteParameter, req: express.Request) {
@@ -68,7 +68,8 @@ export class FromFormBase {
     }
 }
 
-export class FromFile extends FromFormBase implements IRouteArgs {
+@Injectable(RouteArgs)
+export class FromFile extends FromFormBase  {
 
     public get SupportedType(): ParameterType {
         return ParameterType.FromQuery;
@@ -105,7 +106,8 @@ export class FromFile extends FromFormBase implements IRouteArgs {
 
 }
 
-export class FromForm extends FromFormBase implements IRouteArgs {
+@Injectable(RouteArgs)
+export class FromFormField extends FromFormBase {
     public get SupportedType(): ParameterType {
         return ParameterType.FromQuery;
     }
@@ -124,6 +126,29 @@ export class FromForm extends FromFormBase implements IRouteArgs {
                 }
             },
             Args: this.Data.Fields[param.Name]
+        }
+    }
+}
+@Injectable(RouteArgs)
+export class FromForm extends FromFormBase {
+    public get SupportedType(): ParameterType {
+        return ParameterType.FromQuery;
+    }
+
+    public async extract(callData: IRouteCall, param: IRouteParameter, req: express.Request) {
+        
+        if (!this.Data) {
+            await this.parseForm(callData, param, req);
+        }
+
+        return {
+            CallData: {
+                ...callData,
+                Payload: {
+                    Form: this.Data
+                }
+            },
+            Args: this.Data.Fields
         }
     }
 }

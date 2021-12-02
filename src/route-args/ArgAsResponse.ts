@@ -1,8 +1,9 @@
-import { IRouteArgs } from "./RouteArgs";
+import { RouteArgs } from "./RouteArgs";
 import { IRouteParameter, ParameterType, IRouteCall } from "../interfaces";
 import * as express from 'express';
-
-export class ArgAsResponse implements IRouteArgs {
+import { Injectable } from "@spinajs/di";
+@Injectable(RouteArgs)
+export class ArgAsResponse extends RouteArgs {
 
     public get SupportedType(): ParameterType {
         return ParameterType.Res;

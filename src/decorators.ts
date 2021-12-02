@@ -198,8 +198,8 @@ export function Form(schema?: any) {
  *
  * @param options upload options
  */
-export function FormField() {
-  return Route(Parameter(ParameterType.FormField, null));
+export function FormField(schema?: any) {
+  return Route(Parameter(ParameterType.FormField, schema));
 }
 
 /**
