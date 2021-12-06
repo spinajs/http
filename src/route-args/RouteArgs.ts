@@ -8,7 +8,7 @@ export interface IRouteArgsResult
 }
 
 export abstract class RouteArgs {
-    
+
     abstract get SupportedType(): ParameterType | string;
 
     public abstract extract(callData : IRouteCall, route: IRouteParameter, req: express.Request, res : express.Response): Promise<IRouteArgsResult>;

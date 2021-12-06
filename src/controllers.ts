@@ -9,7 +9,7 @@ import {
   IMiddlewareDescriptor,
   BasePolicy,
 } from './interfaces';
-import { AsyncModule, IContainer, Autoinject, DI } from '@spinajs/di';
+import { AsyncModule, IContainer, Autoinject, DI, Inject, InjectAll } from '@spinajs/di';
 import * as express from 'express';
 import { CONTROLLED_DESCRIPTOR_SYMBOL, SCHEMA_SYMBOL } from './decorators';
 import { ValidationFailed, UnexpectedServerError, BadRequest, NotSupported } from '@spinajs/exceptions';
@@ -21,6 +21,7 @@ import * as cs from 'cookie-signature';
 import { Configuration } from '@spinajs/configuration';
 import { DataValidator } from './schemas';
 import { isFunction } from 'lodash';
+import { RouteArgs } from './route-args/RouteArgs';
 
 export abstract class BaseController extends AsyncModule implements IController {
   /**
@@ -31,6 +32,11 @@ export abstract class BaseController extends AsyncModule implements IController 
   protected _router: express.Router;
 
   protected Container: IContainer;
+
+  @InjectAll(RouteArgs)
+  protected _routeArgsExtraction: RouteArgs[];
+
+  protected _routeArgsMap: Map<ParameterType | string, RouteArgs> = new Map();
 
   @Logger({ module: 'BaseController' })
   protected Log: Log;
@@ -120,6 +126,11 @@ export abstract class BaseController extends AsyncModule implements IController 
 
       // register to express router
       (this._router as any)[route.InternalType as string](path, handlers);
+
+      // register route args as map for O(1) lookup
+      this._routeArgsExtraction.forEach(x => {
+        this._routeArgsMap.set(x.SupportedType, x);
+      });
     }
 
     function _invokeAction(source: any, action: any) {
@@ -162,78 +173,20 @@ export abstract class BaseController extends AsyncModule implements IController 
 
     async function _extractRouteArgs(route: IRoute, req: express.Request, res: express.Response) {
       const args = new Array<any>(route.Parameters.size);
-      let multipartsCache: { fields: Fields; files: Files } = null;
+      let callData = {
+        Payload: {}
+      };
 
       for (const [, param] of route.Parameters) {
-        let source = null;
 
-        switch (param.Type) {
-          case ParameterType.FromBody:
-            source = req.body;
-            break;
-          case ParameterType.FromParams:
-            source = req.params;
-            break;
-          case ParameterType.FromQuery:
-            source = req.query;
-            break;
-          case ParameterType.FromCookie:
-            source = req.cookies;
-            break;
-          case ParameterType.FromModel:
-            source = await _extractModel(param.Options, param.RuntimeType, req);
-            break;
-          case ParameterType.FromDi:
-            source = await _inject(param.RuntimeType, param.Options);
-            break;
-          case ParameterType.FormField:
-          case ParameterType.FromFile:
-          case ParameterType.FromForm:
-            source = await _extractMultipart(param.Options, req, param.Type);
-            break;
-          case ParameterType.Res:
-            args[param.Index] = res;
-            continue;
-          case ParameterType.Req:
-            args[param.Index] = req;
-            continue;
+        const extractor = self._routeArgsMap.get(param.Type);
+        if (!extractor) {
+          throw new UnexpectedServerError("invalid route parameter type for param: " + param.Name);
         }
 
-        // if parameter have name defined load it up
-        if (param.Name) {
-          // form fields goes to one
-          if (param.Type === ParameterType.FromCookie) {
-            const secret = DI.get(Configuration).get<string>('http.cookie.secret');
-            const val = source[param.Name];
-
-            if (!val) {
-              args[param.Index] = null;
-            } else {
-              args[param.Index] = cs.unsign(val, secret);
-            }
-          } else if (param.Type === ParameterType.FromFile) {
-
-            // map from formidable to our object
-            // of type IUploadedFile
-            const sourceFile = source[param.Name];
-            args[param.Index] = {
-              Size: sourceFile.size,
-              Path: sourceFile.path,
-              Name: sourceFile.name,
-              Type: sourceFile.type,
-              LastModifiedDate: sourceFile.lastModifiedDate,
-              Hash: sourceFile.hash
-            }
-          }
-          else if (param.Type === ParameterType.FromForm || param.Type === ParameterType.FromModel) {
-            args[param.Index] = source;
-          } else {
-            args[param.Index] = source[param.Name];
-          }
-        } else {
-          // no parameter name, all query params goes to one val
-          args[param.Index] = source;
-        }
+        const { CallData, Args } = await extractor.extract(callData, param, req, res);
+        args[param.Index] = Args;
+        callData = CallData;
 
         const dtoSchema = Reflect.getMetadata(SCHEMA_SYMBOL, param.RuntimeType);
         let schema = dtoSchema ?? param.Schema;
@@ -289,62 +242,6 @@ export abstract class BaseController extends AsyncModule implements IController 
       }
 
       return args;
-
-      async function _inject(type: Constructor<any>, options: any) {
-        return await self.Container.resolve(type, options)
-      }
-
-      async function _extractModel(options: any, type: Constructor<any>, req: express.Request) {
-        if ((type as any).get === undefined) {
-          throw new NotSupported(`${type.name} does not support method find, make sure its model type`);
-        }
-
-        const key = options.KeyName ?? 'Id';
-        const pkVal = req.params[key] ?? req.query[key] ?? req.body[key];
-
-        if (!pkVal) {
-          throw new BadRequest(`key value invalid`);
-        }
-
-        return await (type as any).get.call(null, [pkVal]);
-      }
-
-      async function _extractMultipart(options: any, req: express.Request, type: ParameterType) {
-        if (!multipartsCache) {
-          multipartsCache = await _parse();
-        }
-
-        switch (type) {
-          case ParameterType.FromFile:
-            return multipartsCache.files;
-          case ParameterType.FromForm:
-          case ParameterType.FormField:
-            return multipartsCache.fields;
-        }
-
-        async function  _parse(): Promise<{ fields: Fields; files: Files }> {
-
-          const formOptions = options;
-          
-          if (options && options.uploadDir && isFunction(options.uploadDir)) {
-            const cfg = DI.resolve(Configuration);
-            formOptions.uploadDir = await options.uploadDir(cfg);
-          }
-
-          const form = new IncomingForm(formOptions);
-
-          return new Promise((res, rej) => {
-            form.parse(req, (err: any, fields: Fields, files: Files) => {
-              if (err) {
-                rej(err);
-                return;
-              }
-
-              res({ fields, files });
-            });
-          });
-        }
-      }
     }
   }
 }
