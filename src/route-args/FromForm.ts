@@ -1,10 +1,12 @@
 import { RouteArgs } from "./RouteArgs";
 import { IRouteParameter, ParameterType, IRouteCall } from "../interfaces";
 import * as express from 'express';
-import { Fields, Files, IncomingForm } from "formidable";
+import { Fields, Files, File, IncomingForm } from "formidable";
 import { Configuration } from "@spinajs/configuration";
 import { isFunction } from "lodash";
 import { DI, Injectable } from "@spinajs/di";
+import { parse } from '@fast-csv/parse';
+import * as fs from "fs";
 
 interface FormData {
     Fields: Fields;
@@ -69,10 +71,68 @@ export abstract class FromFormBase extends RouteArgs {
 }
 
 @Injectable(RouteArgs)
-export class FromFile extends FromFormBase  {
+export class FromFile extends FromFormBase {
 
     public get SupportedType(): ParameterType {
         return ParameterType.FromQuery;
+    }
+
+    public async extract(callData: IRouteCall, param: IRouteParameter, req: express.Request): Promise<any> {
+
+        if (!this.Data) {
+            await this.parseForm(callData, param, req);
+        }
+
+        // map from formidable to our object
+        // of type IUploadedFile
+        const formFiles = this.Data.Files[param.Name];
+
+        if (Array.isArray(formFiles)) {
+            return {
+                CallData: {
+                    ...callData,
+                    Payload: {
+                        Form: this.Data
+                    }
+                },
+                Args: (formFiles).map((f: File) => {
+                    return {
+                        Size: f.size,
+                        Path: f.path,
+                        Name: f.name,
+                        Type: f.type,
+                        LastModifiedDate: f.lastModifiedDate,
+                        Hash: f.hash
+                    };
+                })
+            }
+        } else {
+            return {
+                CallData: {
+                    ...callData,
+                    Payload: {
+                        Form: this.Data
+                    }
+                },
+                Args:
+                {
+                    Size: formFiles.size,
+                    Path: formFiles.path,
+                    Name: formFiles.name,
+                    Type: formFiles.type,
+                    LastModifiedDate: formFiles.lastModifiedDate,
+                    Hash: formFiles.hash
+                }
+            }
+        }
+    }
+}
+
+@Injectable(RouteArgs)
+export class JsonFile extends FromFile {
+
+    public get SupportedType(): ParameterType {
+        return ParameterType.FromJSONFile;
     }
 
     public async extract(callData: IRouteCall, param: IRouteParameter, req: express.Request) {
@@ -81,17 +141,12 @@ export class FromFile extends FromFormBase  {
             await this.parseForm(callData, param, req);
         }
 
-        // map from formidable to our object
-        // of type IUploadedFile
-        const sourceFile = this.Data.Files[param.Name];
-        const file = {
-            Size: sourceFile.size,
-            Path: sourceFile.path,
-            Name: sourceFile.name,
-            Type: sourceFile.type,
-            LastModifiedDate: sourceFile.lastModifiedDate,
-            Hash: sourceFile.hash
-        };
+        const sourceFile = (this.Data.Files[param.Name] as File).path;
+        const content = await fs.promises.readFile(sourceFile, { encoding: param.Options.Encoding ?? "utf-8", flag: "r" });
+
+        if (param.Options.DeleteFile) {
+            fs.promises.unlink(sourceFile);
+        }
 
         return {
             CallData: {
@@ -100,20 +155,54 @@ export class FromFile extends FromFormBase  {
                     Form: this.Data
                 }
             },
-            Args: file
+            Args: JSON.parse(content.toString())
         }
     }
 }
 
-@Injectable(RouteArgs)
-export class JsonFile extends FromFile{
-
-}
-
 
 @Injectable(RouteArgs)
-export class CsvFile extends FromFile{
+export class CsvFile extends FromFile {
 
+    public get SupportedType(): ParameterType {
+        return ParameterType.FromCSV;
+    }
+
+    public async extract(callData: IRouteCall, param: IRouteParameter, req: express.Request) {
+
+        if (!this.Data) {
+            await this.parseForm(callData, param, req);
+        }
+
+        const sourceFile = (this.Data.Files[param.Name] as File).path;
+        if (param.Options.DeleteFile) {
+            fs.promises.unlink(sourceFile);
+        }
+
+        const data = await this.parseCvs(sourceFile, param.Options);
+
+
+        return {
+            CallData: {
+                ...callData,
+                Payload: {
+                    Form: this.Data
+                }
+            },
+            Args: data
+        }
+    }
+
+    protected async parseCvs(path: string, options: any) {
+        const data: any[] = [];
+        return new Promise((res, rej) => {
+            fs.createReadStream(path)
+                .pipe(parse(options))
+                .on("error", (err: any) => rej(err))
+                .on("data", (row: any) => data.push(row))
+                .on("end", () => res(data))
+        });
+    }
 }
 
 @Injectable(RouteArgs)
@@ -123,7 +212,7 @@ export class FromFormField extends FromFormBase {
     }
 
     public async extract(callData: IRouteCall, param: IRouteParameter, req: express.Request) {
-        
+
         if (!this.Data) {
             await this.parseForm(callData, param, req);
         }
@@ -146,7 +235,7 @@ export class FromForm extends FromFormBase {
     }
 
     public async extract(callData: IRouteCall, param: IRouteParameter, req: express.Request) {
-        
+
         if (!this.Data) {
             await this.parseForm(callData, param, req);
         }

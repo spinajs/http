@@ -4,6 +4,7 @@ import { Configuration } from '@spinajs/configuration';
 import { DI } from '@spinajs/di';
 import * as cs from 'cookie-signature';
 import { HTTP_STATUS_CODE } from '../interfaces';
+import { CookieOptions } from 'express';
 
 /**
  * Simpel wrapper for coockie response for api consistency.
@@ -16,10 +17,10 @@ export class CookieResponse extends Response {
 
   public async execute(_req: express.Request, res: express.Response): Promise<ResponseFunction> {
     const cfg: Configuration = DI.resolve(Configuration);
-    const cookieOpt = this.cookieLifetime ? this.cookieLifetime * 60 : cfg.get<string>('http.cookie.options');
+    const cookieOpt = this.cookieLifetime ? { maxAge: this.cookieLifetime } : cfg.get<CookieOptions>('http.cookie.options');
 
     if (!this.responseData) {
-      res.clearCookie(this.name, cookieOpt);
+      res.clearCookie(this.name, cookieOpt as CookieOptions);
     } else {
       const secureKey = cfg.get<string>('http.cookie.secret');
       const signed = cs.sign(this.responseData, secureKey);

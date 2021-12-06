@@ -46,13 +46,15 @@
     "cookie-signature": "^1.1.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "fast-csv": "^4.3.6",
     "formidable": "^1.2.2",
     "glob": "^7.1.4",
     "helmet": "^3.23.0",
     "lodash": "^4.17.14",
     "mime": "^2.4.6",
     "pug": "^3.0.0",
-    "randomstring": "^1.1.5"
+    "randomstring": "^1.1.5",
+    "tempfile": "3.0.0"
   },
   "devDependencies": {
     "@types/bunyan": "^1.8.6",
@@ -67,6 +69,7 @@
     "@types/helmet": "^0.0.47",
     "@types/lodash": "^4.14.136",
     "@types/mocha": "^5.2.7",
+    "@types/node": "^16.11.11",
     "@types/pug": "^2.0.4",
     "@types/randomstring": "^1.1.6",
     "@types/sinon": "^7.0.13",

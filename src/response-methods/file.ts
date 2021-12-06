@@ -2,8 +2,10 @@ import { ResourceNotFound } from '@spinajs/exceptions';
 import * as express from 'express';
 import * as fs from 'fs';
 import * as _ from 'lodash';
-import { getType } from 'mime';
+import { lookup } from 'mime';
 import { Response, ResponseFunction } from '../responses';
+import { format, Row, FormatterOptionsArgs } from '@fast-csv/format';
+import tempfile from 'tempfile';
 
 export class FileResponse extends Response {
   protected path: string;
@@ -20,7 +22,7 @@ export class FileResponse extends Response {
   constructor(path: string, filename: string, mimeType?: string) {
     super(null);
 
-    this.mimeType = mimeType ? mimeType : getType(filename);
+    this.mimeType = mimeType ? mimeType : lookup(filename);
     this.filename = filename;
     this.path = path;
 
@@ -33,6 +35,73 @@ export class FileResponse extends Response {
     return new Promise((resolve, reject) => {
       res.download(
         this.path,
+        this.filename,
+        (err: Error) => {
+          if (!_.isNil(err)) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        },
+      );
+    });
+  }
+}
+
+export class CvsFileResponse<I extends Row, O extends Row> extends Response {
+
+  constructor(protected data: any, protected filename: string, protected options?: FormatterOptionsArgs<I, O> | undefined) {
+    super(null);
+  }
+
+  public async execute(_req: express.Request, res: express.Response): Promise<ResponseFunction> {
+
+    const csvStream = format(this.options);
+
+    const tempPath = tempfile('.cvs');
+    const file = await fs.promises.open(tempPath, "w");
+
+    return new Promise((resolve, reject) => {
+      csvStream.pipe(file.createWriteStream())
+        .on("end", () => {
+
+          file.close().then(() => {
+            res.download(
+              tempPath,
+              this.filename,
+              (err: Error) => {
+                if (!_.isNil(err)) {
+                  reject(err);
+                } else {
+                  resolve();
+                }
+
+                fs.unlink(tempPath, null);
+              },
+            );
+          })
+        })
+    });
+  }
+}
+
+export class JsonFileResponse extends Response 
+{ 
+  constructor(protected data: any, protected filename: string) {
+    super(null);
+  }
+
+  public async execute(_req: express.Request, res: express.Response): Promise<ResponseFunction> {
+
+    const tempPath = tempfile('.json');
+    const file = await fs.promises.open(tempPath, "w");
+
+    await file.writeFile(JSON.stringify(this.data));
+
+    return new Promise((resolve, reject) => {
+      res.download(
+        tempPath,
+        this.filename,
         (err: Error) => {
           if (!_.isNil(err)) {
             reject(err);
