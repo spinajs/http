@@ -183,6 +183,46 @@ describe("http & controller tests", function () {
         });
     });
 
+    it("Cvs file response should work", async () =>{ 
+        expect(false).to.be.true;
+    });
+
+    it("Json file response should work", async () =>{ 
+        expect(false).to.be.true;
+    });
+
+    it("Should accept data from csv file", async () =>{ 
+        expect(false).to.be.true;
+    });
+
+    it("Should accept data from json file", async () =>{ 
+        expect(false).to.be.true;
+    });
+
+    it("Should validate schema for form", async() =>{ 
+        expect(false).to.be.true;
+    });
+
+    it("Should accept multiple files", async() =>{ 
+        expect(false).to.be.true;
+    });
+
+    it("Should allow to configure upload dir for incoming files", async() =>{ 
+        expect(false).to.be.true;
+    });
+
+    it("Should get param from request header", async () =>{ 
+        expect(false).to.be.true;
+    });
+
+    it("Should hydrate date js native object", async () =>{ 
+        expect(false).to.be.true;
+    });
+
+    it("Should hydrate momentjs object", async () =>{ 
+        expect(false).to.be.true;
+    });
+
     it("plain response should work", async () => {
         const response = await req().get("sample-controller/v1/testGet").set("Accept", "text/plain").send();
         expect(response).to.have.status(200);
@@ -304,5 +344,5 @@ describe("http & controller tests", function () {
 
 
         expect(response).to.have.status(200);
-    })
+    });
 });

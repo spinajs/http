@@ -1,3 +1,4 @@
+import { DateHydrator, MomentHydrator } from './route-args/ArgHydrator';
 import { PureDataTransformer } from './transformers/PureTransformer';
 import { ResponseFunction } from './responses';
 
@@ -31,6 +32,8 @@ import {
   Conflict,
 } from './response-methods';
 import Express = require('express');
+import { HYDRATOR_SYMBOL } from './decorators';
+import moment from 'moment';
 
 @Injectable()
 export class HttpServer extends AsyncModule {
@@ -81,6 +84,18 @@ export class HttpServer extends AsyncModule {
 
       container.register(PureDataTransformer).as(DataTransformer);
     });
+
+
+    /**
+     * Attach custom hydrators to build in types for controller action parameters
+     */
+    Reflect.defineMetadata(HYDRATOR_SYMBOL, {
+      hydrator: DateHydrator
+    }, Date.prototype);
+
+    Reflect.defineMetadata(HYDRATOR_SYMBOL,{
+      hydrator: MomentHydrator
+    }, moment.prototype);
   }
 
   /**

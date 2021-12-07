@@ -18,7 +18,7 @@ export class FromDi extends AsyncModule implements RouteArgs {
     }
 
     public async extract(callData : IRouteCall, param: IRouteParameter, _req: express.Request) {
-        const srv = this._container.resolve(param.RuntimeType, param.Options);
+        const srv = await this._container.resolve(param.RuntimeType, param.Options);
         return { CallData: callData, Args : srv };
     }
 

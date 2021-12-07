@@ -176,6 +176,9 @@ export abstract class BaseController extends AsyncModule implements IController 
       let callData = {
         Payload: {}
       };
+      let paramsSchema = {
+
+      };
 
       for (const [, param] of route.Parameters) {
 

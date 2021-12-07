@@ -4,13 +4,15 @@ import * as express from 'express';
 import { Injectable } from "@spinajs/di";
 
 @Injectable(RouteArgs)
-export class FromBody extends RouteArgs {
+export class FromHeader extends RouteArgs {
     public get SupportedType(): ParameterType {
         return ParameterType.FromBody;
     }
 
     public async extract(callData : IRouteCall,param: IRouteParameter, req: express.Request) {
-        return { CallData: callData, Args:  req.body[param.Name] };
+        return {
+            CallData: callData,
+            Args: req.headers[param.Name]
+        }
     }
-
 }
