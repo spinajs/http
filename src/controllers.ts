@@ -1,26 +1,12 @@
-import {
-  IController,
-  IControllerDescriptor,
-  IPolicyDescriptor,
-  BaseMiddleware,
-  ParameterType,
-  IRoute,
-  RouteCallback,
-  IMiddlewareDescriptor,
-  BasePolicy,
-} from './interfaces';
-import { AsyncModule, IContainer, Autoinject, DI, Inject, InjectAll } from '@spinajs/di';
+import { IController, IControllerDescriptor, IPolicyDescriptor, BaseMiddleware, ParameterType, IRoute, RouteCallback, IMiddlewareDescriptor, BasePolicy, } from './interfaces';
+import { AsyncModule, IContainer, Autoinject, DI, InjectAll } from '@spinajs/di';
 import * as express from 'express';
 import { CONTROLLED_DESCRIPTOR_SYMBOL, SCHEMA_SYMBOL } from './decorators';
-import { ValidationFailed, UnexpectedServerError, BadRequest, NotSupported } from '@spinajs/exceptions';
+import { ValidationFailed, UnexpectedServerError } from '@spinajs/exceptions';
 import { ClassInfo, TypescriptCompiler, ResolveFromFiles } from '@spinajs/reflection';
 import { HttpServer } from './server';
 import { Logger, Log } from '@spinajs/log';
-import { IncomingForm, Files, Fields } from 'formidable';
-import * as cs from 'cookie-signature';
-import { Configuration } from '@spinajs/configuration';
 import { DataValidator } from './schemas';
-import { isFunction } from 'lodash';
 import { RouteArgs } from './route-args/RouteArgs';
 
 export abstract class BaseController extends AsyncModule implements IController {
@@ -175,9 +161,6 @@ export abstract class BaseController extends AsyncModule implements IController 
       const args = new Array<any>(route.Parameters.size);
       let callData = {
         Payload: {}
-      };
-      let paramsSchema = {
-
       };
 
       for (const [, param] of route.Parameters) {

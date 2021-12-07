@@ -1,5 +1,5 @@
 import { IUploadedFile } from './../../src/interfaces';
-import { PugResponse, Query, Body, Param, Form, Upload, FileResponse } from './../../src';
+import { PugResponse, Query, Body, Param, Form, File, FileResponse } from './../../src';
 import { ServerError } from './../../src';
 import { BaseController, BasePath, Get, Post, Head, Patch, Del, Put, Ok } from "../../src";
 import { join, normalize, resolve } from 'path';
@@ -107,7 +107,7 @@ export class Test extends BaseController {
     }
 
     @Post()
-    public testMultipartForm(@Form() contact: any, @Upload({}) index: IUploadedFile) {
+    public testMultipartForm(@Form() contact: any, @File({}) index: IUploadedFile) {
 
         Test.ParamsMultiForm = contact;
         Test.ParamsFile = index;

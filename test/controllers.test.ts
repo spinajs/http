@@ -183,6 +183,10 @@ describe("http & controller tests", function () {
         });
     });
 
+    it("Should validate schema for simple DTO", async () =>{ 
+        expect(false).to.be.true;
+    });
+
     it("Cvs file response should work", async () =>{ 
         expect(false).to.be.true;
     });

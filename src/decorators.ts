@@ -380,11 +380,13 @@ export function Post(path?: string) {
 
 /**
  *
- * Add schema for object eg. model or dto
+ * Add schema for object eg. model or dto. If schema is not provided,
+ * It tries to build one based on reflected metadata from 
+ * object
  *
  * @param schema schema for object
  */
-export function Schema(schema: any) {
+export function Schema(schema?: any) {
   return (target: any) => {
     Reflect.defineMetadata(SCHEMA_SYMBOL, schema, target);
   };
