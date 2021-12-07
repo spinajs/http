@@ -8,9 +8,13 @@ import {
   IRoute,
   IUploadOptions,
 } from './interfaces';
+import { ArgHydrator } from './route-args/ArgHydrator';
 
 export const CONTROLLED_DESCRIPTOR_SYMBOL = Symbol('CONTROLLER_SYMBOL');
 export const SCHEMA_SYMBOL = Symbol('SCHEMA_SYMBOL');
+export const HYDRATOR_SYMBOL = Symbol("ARG_HYDRATOR_SYMBOL");
+
+
 
 function Controller(
   callback: (
@@ -94,6 +98,23 @@ function Parameter(type: ParameterType, schema?: any, options?: any) {
     };
 
     route.Parameters.set(index, param);
+  };
+}
+
+/**
+ * Tells controller how to fill up incoming parameters in controller actions
+ * 
+ * @param hydrator hydrator class that will fill up incoming argument
+ * @param options 
+ */
+export function ArgumentHydrator(hydrator: Constructor<ArgHydrator>, ...options: any[]) {
+  return (target: any) => {
+    if (!Reflect.getMetadata(HYDRATOR_SYMBOL, target.prototype || target)) {
+      Reflect.defineMetadata(HYDRATOR_SYMBOL, {
+        hydrator,
+        options
+      }, target.prototype || target);
+    }
   };
 }
 
