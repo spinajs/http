@@ -6,7 +6,7 @@ import { Injectable } from "@spinajs/di";
 @Injectable(RouteArgs)
 export class FromHeader extends RouteArgs {
     public get SupportedType(): ParameterType {
-        return ParameterType.FromBody;
+        return ParameterType.FromHeader;
     }
 
     public async extract(callData : IRouteCall,param: IRouteParameter, req: express.Request) {

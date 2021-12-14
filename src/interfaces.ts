@@ -234,6 +234,11 @@ export enum ParameterType {
   FromCookie,
 
   /**
+   * From http header
+   */
+  FromHeader,
+
+  /**
    * Req from express
    */
   Req,

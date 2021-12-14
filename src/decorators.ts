@@ -193,6 +193,10 @@ export function FromModel(schema?: any) {
   return Route(Parameter(ParameterType.FromModel, schema));
 }
 
+export function FromHeader(schema?: any) {
+  return Route(Parameter(ParameterType.FromHeader, schema));
+}
+
 /**
  *
  * Parameter as file
