@@ -29,7 +29,7 @@ function req() {
 class TestConfiguration extends FrameworkConfiguration {
     protected CONFIG_DIRS: string[] = [
         // project path
-        normalize(join(resolve(__dirname), "./config")),
+        "/test/config",
     ];
 }
 
@@ -71,7 +71,7 @@ describe("http & controller tests", function () {
 
     it("should load controllers from dir", async () => {
         const controllers = await ctr().Controllers;
-        expect(controllers.length).to.eq(6);
+        expect(controllers.length).to.eq(7);
     });
 
     it("should server static files", async () => {
@@ -125,11 +125,16 @@ describe("http & controller tests", function () {
     });
 
     it("middleware should run on controller", async () => {
+
+        const onBeforeSpy = sinon.spy(SampleMiddleware.prototype, "onBeforeAction");
+        const onAfterSpy = sinon.spy(SampleMiddleware.prototype, "onAfterAction");
+        
+
         const response = await req().get("testmiddleware/testGet");
         expect(response).to.have.status(200);
 
-        expect(SampleMiddleware.CalledAfter).to.be.true;
-        expect(SampleMiddleware.CalledBefore).to.be.true;
+        expect(onBeforeSpy.called).to.be.true;
+        expect(onAfterSpy.called).to.be.true;
     });
 
     it("middleware should run on specific path", async () => {
@@ -170,7 +175,7 @@ describe("http & controller tests", function () {
         const response = await req().get("sample-controller/v1/testGet").set("Accept", "text/html").send();
         expect(response).to.have.status(200);
         expect(response).to.be.html;
-        expect(response.text).to.eq('<html><head><link rel="icon" type="image/x-icon" href="/responses/favicon.png"/><title> All ok</title><link href="/responses/style.css" rel="stylesheet"/></head><body>   <div class="container"><div class="item"><div class="entry"><h1>200 - All ok</h1></div></div></div></body></html>');
+        expect(response.text).to.eq('<html><head><link rel="icon" type="image/x-icon" href="/static/favicon.png"/><title> All ok</title><link href="/static/style.css" rel="stylesheet"/></head><body>   <div class="container"><div class="item"><div class="entry"><h1>200 - All ok</h1></div></div></div></body></html>');
     });
 
     it("json response should work", async () => {
@@ -238,7 +243,7 @@ describe("http & controller tests", function () {
     it("error handling should work", async () => {
         const response = await req().get("sample-controller/v1/testError");
         expect(response).to.have.status(500);
-        expect(response.text).to.eq('<html><head><link rel="icon" type="image/x-icon" href="/responses/favicon.ico"/><title> Server error</title><link href="/responses/style.css" rel="stylesheet"/></head><body>   <div class="container"><div class="item"><div class="entry"><h1>500 - Server error</h1><div>sample error message</div></div></div></div></body></html>');
+        expect(response.text).to.eq('<html><head><link rel="icon" type="image/x-icon" href="/static/favicon.ico"/><title> Server error</title><link href="/static/style.css" rel="stylesheet"/></head><body>   <div class="container"><div class="item"><div class="entry"><h1>500 - Server error</h1><div>sample error message</div></div></div></div></body></html>');
     });
 
     it("controller view should work", async () => {

@@ -8,9 +8,8 @@ export class FromDi extends AsyncModule implements RouteArgs {
     
     protected _container: IContainer;
 
-    resolveAsync(container: IContainer): Promise<void> {
+    async resolveAsync(container: IContainer): Promise<void> {
         this._container = container;
-        return;
     }
    
     public get SupportedType(): ParameterType {

@@ -37,7 +37,7 @@
   },
   "homepage": "https://github.com/spinajs/http#readme",
   "dependencies": {
-    "@spinajs/di": "^1.0.19",
+    "@spinajs/di": "^1.1.0",
     "@spinajs/intl": "^1.0.1",
     "ajv": "^6.12.2",
     "ajv-merge-patch": "^4.1.0",

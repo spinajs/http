@@ -137,7 +137,7 @@ export class HttpServer extends AsyncModule {
   protected handleResponse() {
     const wrapper = (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
       if (!res.locals.response) {
-        next(new ResourceNotFound(`Route not found ${req.method}:${req.originalUrl}`));
+        next(new ResourceNotFound(`Resource not found ${req.method}:${req.originalUrl}`));
         return;
       }
 

@@ -1,5 +1,5 @@
 import { IController, IControllerDescriptor, IPolicyDescriptor, BaseMiddleware, ParameterType, IRoute, RouteCallback, IMiddlewareDescriptor, BasePolicy, } from './interfaces';
-import { AsyncModule, IContainer, Autoinject, DI, InjectAll } from '@spinajs/di';
+import { AsyncModule, IContainer, Autoinject, DI } from '@spinajs/di';
 import * as express from 'express';
 import { CONTROLLED_DESCRIPTOR_SYMBOL, SCHEMA_SYMBOL } from './decorators';
 import { ValidationFailed, UnexpectedServerError } from '@spinajs/exceptions';
@@ -19,7 +19,7 @@ export abstract class BaseController extends AsyncModule implements IController 
 
   protected Container: IContainer;
 
-  @InjectAll(RouteArgs)
+  @Autoinject(RouteArgs)
   protected _routeArgsExtraction: RouteArgs[];
 
   protected _routeArgsMap: Map<ParameterType | string, RouteArgs> = new Map();
@@ -80,6 +80,7 @@ export abstract class BaseController extends AsyncModule implements IController 
           return self.Container.resolve(m.Type, m.Options);
         }),
       );
+      const enabledMiddlewares = middlewares.filter( m => m.isEnabled(route, this));
 
       this.Log.trace(`Registering route ${route.Method}:${path}`);
 
@@ -87,7 +88,7 @@ export abstract class BaseController extends AsyncModule implements IController 
         ...policies.filter(p => p.isEnabled(route, this)).map(p => _invokePolicyAction(p, p.execute.bind(p), route)),
       );
       handlers.push(
-        ...middlewares.filter(m => m.isEnabled(route, this)).map(m => _invokeAction(m, m.onBeforeAction.bind(m))),
+        ...enabledMiddlewares.map(m => _invokeAction(m, m.onBeforeAction.bind(m))),
       );
 
       const acionWrapper = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -107,7 +108,7 @@ export abstract class BaseController extends AsyncModule implements IController 
 
       handlers.push(acionWrapper);
       handlers.push(
-        ...middlewares.filter(m => m.isEnabled(route, this)).map(m => _invokeAction(m, m.onAfterAction.bind(m))),
+        ...enabledMiddlewares.map(m => _invokeAction(m, m.onAfterAction.bind(m))),
       );
 
       // register to express router

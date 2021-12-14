@@ -129,7 +129,7 @@ export class FromFile extends FromFormBase {
 }
 
 @Injectable(RouteArgs)
-export class JsonFile extends FromFile {
+export class JsonFileRouteArgs extends FromFile {
 
     public get SupportedType(): ParameterType {
         return ParameterType.FromJSONFile;
@@ -162,7 +162,7 @@ export class JsonFile extends FromFile {
 
 
 @Injectable(RouteArgs)
-export class CsvFile extends FromFile {
+export class CsvFileRouteArgs extends FromFile {
 
     public get SupportedType(): ParameterType {
         return ParameterType.FromCSV;
