@@ -128,7 +128,7 @@ describe("http & controller tests", function () {
 
         const onBeforeSpy = sinon.spy(SampleMiddleware.prototype, "onBeforeAction");
         const onAfterSpy = sinon.spy(SampleMiddleware.prototype, "onAfterAction");
-        
+
 
         const response = await req().get("testmiddleware/testGet");
         expect(response).to.have.status(200);
@@ -188,47 +188,47 @@ describe("http & controller tests", function () {
         });
     });
 
-    it("Should validate schema for simple DTO", async () =>{ 
+    it("Should validate schema for simple DTO", async () => {
         expect(false).to.be.true;
     });
 
-    it("Cvs file response should work", async () =>{ 
+    it("Cvs file response should work", async () => {
         expect(false).to.be.true;
     });
 
-    it("Json file response should work", async () =>{ 
+    it("Json file response should work", async () => {
         expect(false).to.be.true;
     });
 
-    it("Should accept data from csv file", async () =>{ 
+    it("Should accept data from csv file", async () => {
         expect(false).to.be.true;
     });
 
-    it("Should accept data from json file", async () =>{ 
+    it("Should accept data from json file", async () => {
         expect(false).to.be.true;
     });
 
-    it("Should validate schema for form", async() =>{ 
+    it("Should validate schema for form", async () => {
         expect(false).to.be.true;
     });
 
-    it("Should accept multiple files", async() =>{ 
+    it("Should accept multiple files", async () => {
         expect(false).to.be.true;
     });
 
-    it("Should allow to configure upload dir for incoming files", async() =>{ 
+    it("Should allow to configure upload dir for incoming files", async () => {
         expect(false).to.be.true;
     });
 
-    it("Should get param from request header", async () =>{ 
+    it("Should get param from request header", async () => {
         expect(false).to.be.true;
     });
 
-    it("Should hydrate date js native object", async () =>{ 
+    it("Should hydrate date js native object", async () => {
         expect(false).to.be.true;
     });
 
-    it("Should hydrate momentjs object", async () =>{ 
+    it("Should hydrate momentjs object", async () => {
         expect(false).to.be.true;
     });
 
@@ -344,12 +344,14 @@ describe("http & controller tests", function () {
         expect(response).to.have.status(400);
     });
 
-    it("should inject service as parameter", async() => {
+    it("should inject service as parameter", async () => {
+
+        const testController = await DI.resolve(Test);
+        const testInjectSpy = sinon.spy(testController, "testInject");
         const response = await req().get("sample-controller/v1/testInject");
 
-        expect(Test.SomeService).to.be.not.undefined;
-        expect(Test.SomeService).to.be.not.null;
-        expect(Test.SomeService.SomeValue).to.eq("constructed");
+        expect(testInjectSpy.calledOnce);
+        expect(testInjectSpy.args[0][0].constructor.name).to.eq("SomeService");
 
 
         expect(response).to.have.status(200);

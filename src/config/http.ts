@@ -93,18 +93,18 @@ module.exports = {
      * in case if we cannot render any static files
      */
     FatalTemplate: `<html>
-<head>
-  <title>Oooops !</title>
-</head>
-<body>
-  <h1>HTTP 500 - Internal Server Error</h1>
-  <div>Looks like we're having some server issues.</div>
-  <hr />
-  <div>
-    Go back to the previous page and try again. If you think something is broken, report a problem with fallowing ticket number:
-  </div>
-  <h3> Ticker no. {ticket}</h3>
-</body>
-</html>`,
+                      <head>
+                        <title>Oooops !</title>
+                      </head>
+                      <body>
+                        <h1>HTTP 500 - Internal Server Error</h1>
+                        <div>Looks like we're having some server issues.</div>
+                        <hr />
+                        <div>
+                          Go back to the previous page and try again. If you think something is broken, report a problem with fallowing ticket number:
+                        </div>
+                        <h3> Ticker no. {ticket}</h3>
+                      </body>
+                    </html>`,
   },
 };

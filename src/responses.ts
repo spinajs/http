@@ -20,7 +20,7 @@ export abstract class Response {
     this.responseData = responseData;
   }
 
-  public abstract async execute(
+  public abstract execute(
     req: express.Request,
     res: express.Response,
     next?: express.NextFunction,

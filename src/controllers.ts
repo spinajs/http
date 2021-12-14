@@ -1,4 +1,4 @@
-import { IController, IControllerDescriptor, IPolicyDescriptor, BaseMiddleware, ParameterType, IRoute, RouteCallback, IMiddlewareDescriptor, BasePolicy, } from './interfaces';
+import { IController, IControllerDescriptor, IPolicyDescriptor, BaseMiddleware, ParameterType, IRoute, IMiddlewareDescriptor, BasePolicy, } from './interfaces';
 import { AsyncModule, IContainer, Autoinject, DI } from '@spinajs/di';
 import * as express from 'express';
 import { CONTROLLED_DESCRIPTOR_SYMBOL, SCHEMA_SYMBOL } from './decorators';
@@ -58,7 +58,7 @@ export abstract class BaseController extends AsyncModule implements IController 
 
     for (const [, route] of this.Descriptor.Routes) {
       const handlers: express.RequestHandler[] = [];
-      const action: RouteCallback = this[route.Method];
+       
       let path = '';
       if (route.Path) {
         if (route.Path === '/') {
@@ -94,7 +94,7 @@ export abstract class BaseController extends AsyncModule implements IController 
       const acionWrapper = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
           const args = (await _extractRouteArgs(route, req, res)).concat([req, res, next]);
-          res.locals.response = await action.call(this, ...args);
+          res.locals.response = await this[route.Method].call(this, ...args);
           next();
         } catch (err) {
           next(err);

@@ -158,7 +158,7 @@ export function BasePath(path: string) {
   });
 }
 
-export function Inject() {
+export function FromDI() {
   return Route(Parameter(ParameterType.FromDi));
 }
 
