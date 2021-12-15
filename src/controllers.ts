@@ -1,3 +1,4 @@
+import { ROUTE_ARG_SCHEMA } from './schemas/RouteArgsSchemas';
 import { IController, IControllerDescriptor, IPolicyDescriptor, BaseMiddleware, ParameterType, IRoute, IMiddlewareDescriptor, BasePolicy, } from './interfaces';
 import { AsyncModule, IContainer, Autoinject, DI } from '@spinajs/di';
 import * as express from 'express';
@@ -180,24 +181,7 @@ export abstract class BaseController extends AsyncModule implements IController 
 
         // try gues schema if one of basic type
         if (!schema) {
-          switch (param.RuntimeType.name) {
-            case "Number":
-              schema = {
-                type: "number"
-              }
-              break;
-            case "String":
-              schema = {
-                type: "string",
-                maxLength: 512
-              }
-              break;
-            case "Boolean":
-              schema = {
-                type: "boolean"
-              }
-              break;
-          }
+          schema = (ROUTE_ARG_SCHEMA as any)[param.RuntimeType.name];
         }
 
         if (schema) {
