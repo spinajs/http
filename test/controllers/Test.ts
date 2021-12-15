@@ -88,14 +88,21 @@ export class Test extends BaseController {
     }
 
     @Post()
-    public testPostParam(@Body() first: string, @Body() second: string) {
+    public testPostParamSingle(@Body() all: TestParamClass) {
+        return new Ok({
+            all
+        });
+    }
 
-        Test.BodyBarams = {
+    @Post()
+    public testPostParam(@Body() first: string, @Body() second: number, @Body() bool: boolean, @Body() int: ITestParamsObject, @Body() object: TestParamClass) {
+        return new Ok({
             first,
-            second
-        };
-
-        return new Ok();
+            second,
+            bool,
+            int,
+            object
+        });
     }
 
     @Get("testParams/:text/:id/:bool/:int/:object")
@@ -146,7 +153,7 @@ export class Test extends BaseController {
             id: { type: "number" }
         },
         required: ["id"]
-    }) data: any) {
+    }) data: TestParamClass) {
         return new Ok({
             data
         });

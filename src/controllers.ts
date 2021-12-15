@@ -171,7 +171,7 @@ export abstract class BaseController extends AsyncModule implements IController 
           throw new UnexpectedServerError("invalid route parameter type for param: " + param.Name);
         }
 
-        const { CallData, Args } = await extractor.extract(callData, param, req, res);
+        const { CallData, Args } = await extractor.extract(callData, param, req, res, route);
         args[param.Index] = Args;
         callData = CallData;
 
@@ -200,15 +200,6 @@ export abstract class BaseController extends AsyncModule implements IController 
           }
         }
 
-        // query params are always sent as strings, even numbers,
-        // we must try to parse them as integers / booleans first
-        if (param.RuntimeType.name === 'Number') {
-          args[param.Index] = Number((args as any)[param.Index]);
-        }
-        if (param.RuntimeType.name === 'Boolean' && typeof args[param.Index] === "string") {
-          args[param.Index] = args[param.Index] === "true" ? true : false;
-        }
-
         if (schema) {
           const validator = await self.Container.resolve<DataValidator>(DataValidator);
           if (!validator) {
@@ -223,7 +214,6 @@ export abstract class BaseController extends AsyncModule implements IController 
                 errors: result.errors,
               });
             }
-
           }
         }
       }

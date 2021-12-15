@@ -1,4 +1,4 @@
-import { ParameterType, IRouteParameter, IRouteCall} from './../interfaces';
+import { ParameterType, IRouteParameter, IRouteCall, IRoute} from './../interfaces';
 import * as express from "express";
 
 export interface IRouteArgsResult 
@@ -11,5 +11,5 @@ export abstract class RouteArgs {
 
     abstract get SupportedType(): ParameterType | string;
 
-    public abstract extract(callData : IRouteCall, route: IRouteParameter, req: express.Request, res : express.Response): Promise<IRouteArgsResult>;
+    public abstract extract(callData : IRouteCall, routeParameter: IRouteParameter, req: express.Request, res : express.Response, route? : IRoute): Promise<IRouteArgsResult>;
 }

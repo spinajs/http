@@ -276,14 +276,37 @@ describe("http & controller tests", function () {
         });
     });
 
-    it("should pass post params", async () => {
-        const response = await req().post("sample-controller/v1/testPostParam").send({ first: "pl", second: "hello world" });
-        expect(response).to.have.status(200);
+    it("should pass post data as object", async () => {
 
-        expect(Test.BodyBarams).to.include({
-            first: "pl",
-            second: "hello world"
+        const testController = await DI.resolve(Test);
+        const testFunc = sinon.spy(testController, "testPostParamSingle");
+        
+        const response = await req().post("sample-controller/v1/testPostParamSingle").send({ id: 1});
+        expect(response).to.have.status(200);
+        expect(testFunc.args[0][0]).to.include({
+            id: 1
         });
+        expect(testFunc.args[0][0].constructor.name).to.eq("TestParamClass");
+    });
+
+    it("should pass post params as args", async () => {
+        const testController = await DI.resolve(Test);
+        const testFunc = sinon.spy(testController, "testPostParam");
+
+        const response = await req().post("sample-controller/v1/testPostParam").send({ first: "pl", second: 1234, bool: true, int: { id: 1 }, object: { id: 2 } });
+        expect(response).to.have.status(200);
+        expect(testFunc.calledOnce).to.be.true;
+        expect(testFunc.args[0][0]).to.eq("pl");
+        expect(testFunc.args[0][1]).to.eq(1234);
+        expect(testFunc.args[0][2]).to.eq(true);
+        expect(testFunc.args[0][3]).to.include({
+            id: 1
+        });
+        expect(testFunc.args[0][4]).to.include({
+            id: 2
+        });
+        expect(testFunc.args[0][4].constructor.name).to.eq("TestParamClass");
+       
     });
 
     it("should pass query param", async () => {
@@ -356,10 +379,10 @@ describe("http & controller tests", function () {
     });
 
     it("should validate body", async () => {
-        let response = await req().post("sample-controller/v1/testValidation2").send({ data: { id: 1 } });
+        let response = await req().post("sample-controller/v1/testValidation2").send({ id: 1 } );
         expect(response).to.have.status(200);
 
-        response = await req().post("sample-controller/v1/testValidation2").send({ data: { id: "ddd" } });
+        response = await req().post("sample-controller/v1/testValidation2").send({ id: "ddd" });
         expect(response).to.have.status(400);
     });
 
