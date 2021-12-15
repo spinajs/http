@@ -1,10 +1,10 @@
-import { RouteArgs } from "./RouteArgs";
+import { IRouteArgs, RouteArgs } from "./RouteArgs";
 import { IRouteParameter, ParameterType, IRouteCall } from "../interfaces";
 import * as express from 'express';
 import { AsyncModule, IContainer, Injectable } from "@spinajs/di";
 
 @Injectable(RouteArgs)
-export class FromDi extends AsyncModule implements RouteArgs {
+export class FromDi extends AsyncModule implements IRouteArgs {
     
     protected _container: IContainer;
 
