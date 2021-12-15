@@ -4,6 +4,8 @@ import { ServerError } from './../../src';
 import { BaseController, BasePath, Get, Post, Head, Patch, Del, Put, Ok } from "../../src";
 import { join, normalize, resolve } from 'path';
 import { SomeService } from '../service/SomeService';
+import { DateTime } from 'luxon';
+import { TestHydrator } from '../hydrator/HydratorTest';
 
 export interface ITestParamsObject {
     id: number;
@@ -158,9 +160,16 @@ export class Test extends BaseController {
     }
 
     @Post()
-    public testMomentJsHydrator(@Body() date : moment.Moment){
+    public testLuxorDateTime(@Body() date: DateTime) {
         return new Ok({
             date
+        });
+    }
+
+    @Post()
+    public testDataHydration(@Body() data: TestHydrator) {
+        return new Ok({
+            data
         });
     }
 }

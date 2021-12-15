@@ -224,19 +224,28 @@ describe("http & controller tests", function () {
         expect(false).to.be.true;
     });
 
-    it("Should hydrate date js native object", async () => {
-        expect(false).to.be.true;
-    });
-
-    it("Should hydrate momentjs object", async () => {
-
+    it("Should hydrate custom class object", async () => {
         const testController = await DI.resolve(Test);
-        const testFunc = sinon.spy(testController, "testMomentJsHydrator");
+        const testFunc = sinon.spy(testController, "testDataHydration");
 
-        const response = await req().post("sample-controller/v1/testMomentJsHydrator").send({ date: new Date()});
+        const response = await req().post("sample-controller/v1/testDataHydration").send({ Id: 1234});
         expect(response).to.have.status(200);
         expect(testFunc.calledOnce).to.be.true;
-        expect(testFunc.args[0][0].constructor.name).to.eq("Moment");
+        expect(testFunc.args[0][0]).to.include({
+            Id: "1234"
+        });
+        expect(testFunc.args[0][0].constructor.name).to.eq("TestHydrator");
+    });
+
+    it("Should pass luxor DateTime object", async () => {
+
+        const testController = await DI.resolve(Test);
+        const testFunc = sinon.spy(testController, "testLuxorDateTime");
+
+        const response = await req().post("sample-controller/v1/testLuxorDateTime").send({ date: new Date()});
+        expect(response).to.have.status(200);
+        expect(testFunc.calledOnce).to.be.true;
+        expect(testFunc.args[0][0].constructor.name).to.eq("DateTime");
 
     });
 

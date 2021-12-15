@@ -9,10 +9,17 @@ export class FromHeaderArg extends RouteArgs {
         return ParameterType.FromHeader;
     }
 
-    public async extract(callData : IRouteCall,param: IRouteParameter, req: express.Request) {
+    public async extract(callData: IRouteCall, param: IRouteParameter, req: express.Request) {
+        let result = req.headers[param.Name];
+        
+        const [hydrated, hValue] = await this.tryHydrate(result, param);
+        if (hydrated) {
+            result = hValue;
+        } 
+
         return {
             CallData: callData,
-            Args: req.headers[param.Name]
+            Args: result
         }
     }
 }

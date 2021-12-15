@@ -216,7 +216,7 @@ export class FromFormField extends FromFormBase {
         if (!this.Data) {
             await this.parseForm(callData, param, req);
         }
-
+        
         return {
             CallData: {
                 ...callData,
@@ -240,6 +240,12 @@ export class FromForm extends FromFormBase {
             await this.parseForm(callData, param, req);
         }
 
+        let result = this.Data.Fields;
+        const [hydrated, hValue] = await this.tryHydrate(this.Data.Fields, param);
+        if (hydrated) {
+            result = hValue;
+        }  
+
         return {
             CallData: {
                 ...callData,
@@ -247,7 +253,7 @@ export class FromForm extends FromFormBase {
                     Form: this.Data
                 }
             },
-            Args: this.Data.Fields
+            Args: 
         }
     }
 }

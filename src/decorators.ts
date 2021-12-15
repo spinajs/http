@@ -12,7 +12,7 @@ import { ArgHydrator } from './route-args/ArgHydrator';
 
 export const CONTROLLED_DESCRIPTOR_SYMBOL = Symbol('CONTROLLER_SYMBOL');
 export const SCHEMA_SYMBOL = Symbol('SCHEMA_SYMBOL');
-export const HYDRATOR_SYMBOL = Symbol("ARG_HYDRATOR_SYMBOL");
+
 
 
 
@@ -109,11 +109,14 @@ function Parameter(type: ParameterType, schema?: any, options?: any) {
  */
 export function ArgumentHydrator(hydrator: Constructor<ArgHydrator>, ...options: any[]) {
   return (target: any) => {
-    if (!Reflect.getMetadata(HYDRATOR_SYMBOL, target.prototype || target)) {
-      Reflect.defineMetadata(HYDRATOR_SYMBOL, {
+    if (!Reflect.getMetadata("custom:arg_hydrator", target)) {
+      Reflect.defineMetadata("custom:arg_hydrator", {
         hydrator,
         options
-      }, target.prototype || target);
+      }, target);
+
+      target.fuck = "dadadadada";
+  
     }
   };
 }

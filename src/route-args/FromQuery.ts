@@ -13,18 +13,24 @@ export class FromQuery extends RouteArgs {
         const arg = req.query[param.Name];
         let result = null;
 
-        switch (param.RuntimeType.name) {
+        const [hydrated, hValue] = await this.tryHydrate(result, param);
+        if (hydrated) {
+            result = hValue;
+        }
+        else {
+            switch (param.RuntimeType.name) {
 
-            // query params are always sent as strings, even numbers,
-            // we must try to parse them as integers / booleans / objects
-            case "String": result = arg; break;
-            case "Number": result = Number(arg); break;
-            case "Boolean": result = ((arg as string).toLowerCase() === "true") ? true : false; break;
-            case "Object":  result = arg; break;
-            default: result = new param.RuntimeType(arg); break;
+                // query params are always sent as strings, even numbers,
+                // we must try to parse them as integers / booleans / objects
+                case "String": result = arg; break;
+                case "Number": result = Number(arg); break;
+                case "Boolean": result = ((arg as string).toLowerCase() === "true") ? true : false; break;
+                case "Object": result = arg; break;
+                default: result = new param.RuntimeType(arg); break;
+            }
         }
 
-        return { CallData: callData, Args: result};
+        return { CallData: callData, Args: result };
     }
 
 }
