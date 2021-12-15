@@ -5,6 +5,18 @@ import { BaseController, BasePath, Get, Post, Head, Patch, Del, Put, Ok } from "
 import { join, normalize, resolve } from 'path';
 import { SomeService } from '../service/SomeService';
 
+export interface ITestParamsObject {
+    id: number;
+}
+
+export class TestParamClass {
+    id: number;
+
+    constructor(data: any) {
+        Object.assign(this, data);
+    }
+}
+
 @BasePath("sample-controller/v1")
 export class Test extends BaseController {
     public static QueryParams: any;
@@ -86,15 +98,14 @@ export class Test extends BaseController {
         return new Ok();
     }
 
-    @Get("testParamsParams/:id")
-    public testParamsParams(@Param() id: number) {
-
-        Test.ParamsParams = {
-            id
-        };
-
+    @Get("testParams/:text/:id/:bool/:int/:object")
+    public testParams(@Param() text: string, @Param() id: number, @Param() bool: boolean, @Param() int: ITestParamsObject, @Param() object: TestParamClass) {
         return new Ok({
-            id
+            text,
+            id,
+            bool,
+            int,
+            object
         });
     }
 
@@ -105,11 +116,7 @@ export class Test extends BaseController {
     }
 
     @Post()
-    public testMultipartForm(@Form() contact: any, @File({}) index: IUploadedFile) {
-
-        Test.ParamsMultiForm = contact;
-        Test.ParamsFile = index;
-
+    public testMultipartForm(@Form() _contact: any, @File() _index: IUploadedFile) {
         return new Ok();
     }
 
@@ -128,8 +135,7 @@ export class Test extends BaseController {
     }
 
     @Get()
-    public testInject(@FromDI() _someService : SomeService)
-    {
+    public testInject(@FromDI() _someService: SomeService) {
         return new Ok();
     }
 

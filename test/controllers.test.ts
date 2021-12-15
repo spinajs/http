@@ -286,22 +286,36 @@ describe("http & controller tests", function () {
         });
     });
 
-    it("should pass form params", async () => {
-        const response = await req().get("sample-controller/v1/testParamsParams/12345")
-        expect(response).to.have.status(200);
+    it("should pass query param", async () => {
+        const testController = await DI.resolve(Test);
+        const testFunc = sinon.spy(testController, "testParams");
 
-        expect(Test.ParamsParams).to.include({
-            id: 12345
+        const response = await req().get("sample-controller/v1/testParams/testString/12345/true/" + JSON.stringify({ id: 1 }) + "/" + JSON.stringify({ id: 1 }))
+        expect(response).to.have.status(200);
+        expect(testFunc.calledOnce).to.be.true;
+        expect(testFunc.args[0][0]).to.eq("testString");
+        expect(testFunc.args[0][1]).to.eq(12345);
+        expect(testFunc.args[0][2]).to.eq(true);
+        expect(testFunc.args[0][3]).to.include({
+            id: 1
         });
+        expect(testFunc.args[0][4]).to.include({
+            id: 1
+        });
+        expect(testFunc.args[0][4].constructor.name).to.eq("TestParamClass");
     });
 
     it("should pass form params", async () => {
+        const testController = await DI.resolve(Test);
+        const testFunc = sinon.spy(testController, "testForm");
+
         const response = await req().post("sample-controller/v1/testForm")
             .field("hello", "world")
             .field("foo", "bar");
 
         expect(response).to.have.status(200);
-        expect(Test.ParamsForm).to.include({
+        expect(testFunc.calledOnce).to.be.true;
+        expect(testFunc.args[0][0]).to.include({
             hello: "world",
             foo: "bar"
         });
@@ -309,18 +323,22 @@ describe("http & controller tests", function () {
     });
 
     it("should pass file params", async () => {
-        const response = await req().post("sample-controller/v1/testMultipartForm").attach('index', fs.readFileSync(normalize(join(resolve(__dirname), "./public/index.html"))), 'index.html')
+
+        const testController = await DI.resolve(Test);
+        const testFunc = sinon.spy(testController, "testMultipartForm");
+
+        const response = await req().post("sample-controller/v1/testMultipartForm").attach('_index', fs.readFileSync(normalize(join(resolve(__dirname), "./public/index.html"))), 'index.html')
             .field("hello", "world")
             .field("foo", "bar");
 
         expect(response).to.have.status(200);
-        expect(Test.ParamsMultiForm).to.include({
+        expect(testFunc.calledOnce).to.be.true;
+        expect(testFunc.args[0][0]).to.include({
             hello: "world",
             foo: "bar"
         });
-        expect(Test.ParamsFile).to.be.not.undefined;
-        expect(Test.ParamsFile).to.be.not.null;
-        expect(Test.ParamsFile.Name).to.eq("index.html");
+
+        expect(testFunc.args[0][1].Name).to.eq("index.html");
     });
 
     it("should response with file", async () => {

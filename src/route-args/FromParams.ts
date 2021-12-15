@@ -9,26 +9,21 @@ export class FromParams extends RouteArgs {
         return ParameterType.FromParams;
     }
 
-    public async extract(callData : IRouteCall, param: IRouteParameter, req: express.Request) {
+    public async extract(callData: IRouteCall, param: IRouteParameter, req: express.Request) {
         const arg = req.params[param.Name];
+        let result = null;
 
-        // query params are always sent as strings, even numbers,
-        // we must try to parse them as integers / booleans / objects
-        if(param.RuntimeType === 'Number')
-        {
-            return Number(arg);
+        switch (param.RuntimeType.name) {
+
+            // query params are always sent as strings, even numbers,
+            // we must try to parse them as integers / booleans / objects
+            case "String": result = String(arg); break;
+            case "Number": result = Number(arg); break;
+            case "Boolean": result = (arg.toLowerCase() === "true") ? true : false; break;
+            case "Object": result = JSON.parse(arg); break;
+            default: result = new param.RuntimeType(JSON.parse(arg)); break;
         }
 
-        if(param.RuntimeType === 'Boolean')
-        {
-            return (arg.toLowerCase() === "true") ? true : false;
-        }
-
-        if(param.RuntimeType === "Object"){
-            return JSON.parse(arg);
-        }
-
-        return { CallData: callData, Args : arg };
+        return { CallData: callData, Args: result};
     }
-
 }

@@ -74,7 +74,7 @@ export abstract class FromFormBase extends RouteArgs {
 export class FromFile extends FromFormBase {
 
     public get SupportedType(): ParameterType {
-        return ParameterType.FromQuery;
+        return ParameterType.FromFile;
     }
 
     public async extract(callData: IRouteCall, param: IRouteParameter, req: express.Request): Promise<any> {
@@ -208,7 +208,7 @@ export class CsvFileRouteArgs extends FromFile {
 @Injectable(RouteArgs)
 export class FromFormField extends FromFormBase {
     public get SupportedType(): ParameterType {
-        return ParameterType.FromQuery;
+        return ParameterType.FromForm;
     }
 
     public async extract(callData: IRouteCall, param: IRouteParameter, req: express.Request) {
@@ -231,7 +231,7 @@ export class FromFormField extends FromFormBase {
 @Injectable(RouteArgs)
 export class FromForm extends FromFormBase {
     public get SupportedType(): ParameterType {
-        return ParameterType.FromQuery;
+        return ParameterType.FromForm;
     }
 
     public async extract(callData: IRouteCall, param: IRouteParameter, req: express.Request) {
