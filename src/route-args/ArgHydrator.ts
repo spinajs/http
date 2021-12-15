@@ -17,20 +17,10 @@ export class DateHydrator extends ArgHydrator {
     public async hydrate(input: any) {
 
         if (isNaN(input)) {
-            const dt = moment(input, this.dateFormat ?? moment.ISO_8601)
-            if (dt.isValid()) {
-                return dt.toDate();
-            }
-
-            return null;
+            return new Date(input);
         }
 
-        const uDt = moment.unix(parseInt(input));
-        if(uDt.isValid()){
-            return uDt.toDate();
-        }
-
-        return null;
+        return new Date(parseInt(input) * 1000);
     }
 }
 

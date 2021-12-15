@@ -1,4 +1,3 @@
-import { DateHydrator, MomentHydrator } from './route-args/ArgHydrator';
 import { PureDataTransformer } from './transformers/PureTransformer';
 import { ResponseFunction } from './responses';
 
@@ -9,31 +8,10 @@ import { Server } from 'http';
 import { RequestHandler } from 'express';
 import { IHttpStaticFileConfiguration, DataTransformer } from './interfaces';
 import * as fs from 'fs';
-import {
-  UnexpectedServerError,
-  AuthenticationFailed,
-  Forbidden,
-  InvalidArgument,
-  BadRequest,
-  ValidationFailed,
-  JsonValidationFailed,
-  ExpectedResponseUnacceptable,
-  ResourceNotFound,
-  IOFail,
-  MethodNotImplemented,
-  ResourceDuplicated,
-} from '@spinajs/exceptions';
-import {
-  Unauthorized,
-  NotFound,
-  ServerError,
-  BadRequest as BadRequestResponse,
-  Forbidden as ForbiddenResponse,
-  Conflict,
-} from './response-methods';
+import { UnexpectedServerError, AuthenticationFailed, Forbidden, InvalidArgument, BadRequest, ValidationFailed, JsonValidationFailed, ExpectedResponseUnacceptable, ResourceNotFound, IOFail, MethodNotImplemented, ResourceDuplicated } from '@spinajs/exceptions';
+import { Unauthorized, NotFound, ServerError, BadRequest as BadRequestResponse, Forbidden as ForbiddenResponse, Conflict, } from './response-methods';
 import Express = require('express');
-import { HYDRATOR_SYMBOL } from './decorators';
-import moment from 'moment';
+
 
 @Injectable()
 export class HttpServer extends AsyncModule {
@@ -84,18 +62,6 @@ export class HttpServer extends AsyncModule {
 
       container.register(PureDataTransformer).as(DataTransformer);
     });
-
-
-    /**
-     * Attach custom hydrators to build in types for controller action parameters
-     */
-    Reflect.defineMetadata(HYDRATOR_SYMBOL, {
-      hydrator: DateHydrator
-    }, Date.prototype);
-
-    Reflect.defineMetadata(HYDRATOR_SYMBOL,{
-      hydrator: MomentHydrator
-    }, moment.prototype);
   }
 
   /**

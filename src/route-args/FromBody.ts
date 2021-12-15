@@ -1,7 +1,9 @@
+import { HYDRATOR_SYMBOL } from './../decorators';
 import { RouteArgs } from "./RouteArgs";
 import { IRouteParameter, ParameterType, IRouteCall, IRoute } from "../interfaces";
 import * as express from 'express';
-import { Injectable } from "@spinajs/di";
+import { DI, Injectable } from "@spinajs/di";
+import { ArgHydrator } from '.';
 
 @Injectable(RouteArgs)
 export class FromBody extends RouteArgs {
@@ -11,7 +13,14 @@ export class FromBody extends RouteArgs {
 
     public async extract(callData: IRouteCall, param: IRouteParameter, req: express.Request, _res: express.Response, route: IRoute) {
         const arg = req.body[param.Name] ? req.body[param.Name] : route.Parameters.size === 1 ? req.body : null;
+        const hydrator = Reflect.getMetadata(HYDRATOR_SYMBOL, param.RuntimeType);
         let result = null;
+
+        if(hydrator)
+        {
+            const hInstance = await DI.resolve<ArgHydrator>(hydrator);
+            return hInstance.hydrate(arg);
+        }
 
         switch (param.RuntimeType.name) {
 
