@@ -68,6 +68,7 @@
     "@types/formidable": "^1.0.31",
     "@types/helmet": "^0.0.47",
     "@types/lodash": "^4.14.136",
+    "@types/mime": "^2.0.3",
     "@types/mocha": "^5.2.7",
     "@types/node": "^16.11.11",
     "@types/pug": "^2.0.4",

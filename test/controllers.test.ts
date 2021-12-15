@@ -326,6 +326,7 @@ describe("http & controller tests", function () {
     it("should response with file", async () => {
         const response = await req().get("sample-controller/v1/testFileResponse");
         expect(response).to.have.status(200);
+        expect(response.text).to.eq("<html>\r\n    <body>\r\n        <h1>Test</h1>\r\n    </body>\r\n</html>");
     });
 
     it("should validate params schema simple", async () => {

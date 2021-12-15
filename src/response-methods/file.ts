@@ -2,7 +2,7 @@ import { ResourceNotFound } from '@spinajs/exceptions';
 import * as express from 'express';
 import * as fs from 'fs';
 import * as _ from 'lodash';
-import { lookup } from 'mime';
+import { getType } from 'mime';
 import { Response, ResponseFunction } from '../responses';
 import { format, Row, FormatterOptionsArgs } from '@fast-csv/format';
 import tempfile from 'tempfile';
@@ -22,7 +22,7 @@ export class FileResponse extends Response {
   constructor(path: string, filename: string, mimeType?: string) {
     super(null);
 
-    this.mimeType = mimeType ? mimeType : lookup(filename);
+    this.mimeType = mimeType ? mimeType : getType(filename);
     this.filename = filename;
     this.path = path;
 
