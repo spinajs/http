@@ -17,11 +17,11 @@ export class FromQuery extends RouteArgs {
 
             // query params are always sent as strings, even numbers,
             // we must try to parse them as integers / booleans / objects
-            case "String": result = String(arg); break;
+            case "String": result = arg; break;
             case "Number": result = Number(arg); break;
             case "Boolean": result = ((arg as string).toLowerCase() === "true") ? true : false; break;
-            case "Object": result = JSON.parse(arg as string); break;
-            default: result = new param.RuntimeType(JSON.parse(arg as string)); break;
+            case "Object":  result = arg; break;
+            default: result = new param.RuntimeType(arg); break;
         }
 
         return { CallData: callData, Args: result};

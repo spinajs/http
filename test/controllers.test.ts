@@ -229,7 +229,15 @@ describe("http & controller tests", function () {
     });
 
     it("Should hydrate momentjs object", async () => {
-        expect(false).to.be.true;
+
+        const testController = await DI.resolve(Test);
+        const testFunc = sinon.spy(testController, "testMomentJsHydrator");
+
+        const response = await req().post("sample-controller/v1/testMomentJsHydrator").send({ date: new Date()});
+        expect(response).to.have.status(200);
+        expect(testFunc.calledOnce).to.be.true;
+        expect(testFunc.args[0][0].constructor.name).to.eq("Moment");
+
     });
 
     it("plain response should work", async () => {
@@ -267,21 +275,34 @@ describe("http & controller tests", function () {
     });
 
     it("should pass query params", async () => {
-        const response = await req().get("sample-controller/v1/testQueryParam").query({ first: "pl", second: "hello world" });
-        expect(response).to.have.status(200);
 
-        expect(Test.QueryParams).to.include({
-            first: "pl",
-            second: "hello world"
+        const testController = await DI.resolve(Test);
+        const testFunc = sinon.spy(testController, "testQueryParam");
+
+
+        const response = await req().get("sample-controller/v1/testQueryParam").query({ first: "pl", second: 1234, bool: true, int: { id: 1 }, object: {id : 2} });
+        expect(response).to.have.status(200);
+        expect(testFunc.calledOnce).to.be.true;
+        expect(testFunc.args[0][0]).to.eq("pl");
+        expect(testFunc.args[0][1]).to.eq(1234);
+        expect(testFunc.args[0][2]).to.eq(true);
+        expect(testFunc.args[0][3]).to.include({
+            id: '1' // object passed as query params have allways props as strings
         });
+        expect(testFunc.args[0][4]).to.include({
+            id: '2'
+        });
+        expect(testFunc.args[0][4].constructor.name).to.eq("TestParamClass");
+
+
     });
 
     it("should pass post data as object", async () => {
 
         const testController = await DI.resolve(Test);
         const testFunc = sinon.spy(testController, "testPostParamSingle");
-        
-        const response = await req().post("sample-controller/v1/testPostParamSingle").send({ id: 1});
+
+        const response = await req().post("sample-controller/v1/testPostParamSingle").send({ id: 1 });
         expect(response).to.have.status(200);
         expect(testFunc.args[0][0]).to.include({
             id: 1
@@ -306,7 +327,7 @@ describe("http & controller tests", function () {
             id: 2
         });
         expect(testFunc.args[0][4].constructor.name).to.eq("TestParamClass");
-       
+
     });
 
     it("should pass query param", async () => {
@@ -379,7 +400,7 @@ describe("http & controller tests", function () {
     });
 
     it("should validate body", async () => {
-        let response = await req().post("sample-controller/v1/testValidation2").send({ id: 1 } );
+        let response = await req().post("sample-controller/v1/testValidation2").send({ id: 1 });
         expect(response).to.have.status(200);
 
         response = await req().post("sample-controller/v1/testValidation2").send({ id: "ddd" });

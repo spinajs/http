@@ -10,17 +10,18 @@ export class FromBody extends RouteArgs {
     }
 
     public async extract(callData: IRouteCall, param: IRouteParameter, req: express.Request, _res: express.Response, route: IRoute) {
-        const arg = route.Parameters.size === 1 ? req.body : req.body[param.Name];
+        const arg = req.body[param.Name] ? req.body[param.Name] : route.Parameters.size === 1 ? req.body : null;
         let result = null;
 
         switch (param.RuntimeType.name) {
 
             // query params are always sent as strings, even numbers,
             // we must try to parse them as integers / booleans / objects
-            case "String": result = String(arg); break;
-            case "Number": result = Number(arg); break;
-            case "Boolean": result = (arg.toLowerCase() === "true") ? true : false; break;
-            case "Object": result = arg; break;
+            case "String":
+            case "Number":
+            case "Boolean":
+            case "Object": result = arg;
+                break;
             default: result = new param.RuntimeType(arg); break;
         }
 

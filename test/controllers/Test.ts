@@ -74,17 +74,15 @@ export class Test extends BaseController {
         return new PugResponse("test-view-intl.pug", { sampleText: "witaj świecie" });
     }
 
-
-
     @Get()
-    public testQueryParam(@Query() first: string, @Query() second: string) {
-
-        Test.QueryParams = {
+    public testQueryParam(@Query() first: string, @Query() second: number, @Query() bool: boolean, @Query() int: ITestParamsObject, @Query() object: TestParamClass) {
+        return new Ok({
             first,
-            second
-        };
-
-        return new Ok();
+            second,
+            bool,
+            int,
+            object
+        });
     }
 
     @Post()
@@ -156,6 +154,13 @@ export class Test extends BaseController {
     }) data: TestParamClass) {
         return new Ok({
             data
+        });
+    }
+
+    @Post()
+    public testMomentJsHydrator(@Body() date : moment.Moment){
+        return new Ok({
+            date
         });
     }
 }
