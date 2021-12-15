@@ -114,9 +114,6 @@ export function ArgumentHydrator(hydrator: Constructor<ArgHydrator>, ...options:
         hydrator,
         options
       }, target);
-
-      target.fuck = "dadadadada";
-  
     }
   };
 }
