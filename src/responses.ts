@@ -24,7 +24,7 @@ export abstract class Response {
     req: express.Request,
     res: express.Response,
     next?: express.NextFunction,
-  ): Promise<ResponseFunction>;
+  ): Promise<void>;
 }
 
 /**

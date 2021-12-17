@@ -1,6 +1,5 @@
 import { DateTime } from "luxon";
 import { ArgHydrator, ArgumentHydrator, BaseController, BasePath, Body, Form, Uuid, FormField, Get, File, Header, IUploadedFile, Ok, Param, Post, Query, Schema, PKey, Cookie, JsonFile, CsvFile } from "../../src";
-import { v4 as uuidv4} from "uuid";
 
 interface SampleObject {
     id: number;
@@ -27,6 +26,17 @@ export class SampleModel {
     required: ["id", "name", "args"]
 })
 export class SampleModelWithSchema {
+    public id: number;
+    public name: string;
+    public args: number[];
+
+    constructor(data: any) {
+        Object.assign(this, data);
+    }
+}
+
+@Schema()
+export class SampleModelWithGeneratedSchema {
     public id: number;
     public name: string;
     public args: number[];
@@ -208,6 +218,11 @@ export class Params extends BaseController {
 
     @Post()
     public objectWithSchema(@Body() model: SampleModelWithSchema) {
+        return new Ok({ model })
+    }
+
+    @Post()
+    public objectWithGeneratedSchema(@Body() model: SampleModelWithGeneratedSchema) {
         return new Ok({ model })
     }
 

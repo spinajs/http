@@ -3,7 +3,7 @@ import * as express from 'express';
 import * as fs from 'fs';
 import * as _ from 'lodash';
 import { getType } from 'mime';
-import { Response, ResponseFunction } from '../responses';
+import { Response } from '../responses';
 import { format, Row, FormatterOptionsArgs } from '@fast-csv/format';
 import tempfile from 'tempfile';
 
@@ -31,7 +31,7 @@ export class FileResponse extends Response {
     }
   }
 
-  public async execute(_req: express.Request, res: express.Response): Promise<ResponseFunction> {
+  public async execute(_req: express.Request, res: express.Response): Promise<void> {
     return new Promise((resolve, reject) => {
       res.download(
         this.path,
@@ -54,7 +54,7 @@ export class CvsFileResponse<I extends Row, O extends Row> extends Response {
     super(null);
   }
 
-  public async execute(_req: express.Request, res: express.Response): Promise<ResponseFunction> {
+  public async execute(_req: express.Request, res: express.Response): Promise<void> {
 
     const csvStream = format(this.options);
 
@@ -70,7 +70,7 @@ export class CvsFileResponse<I extends Row, O extends Row> extends Response {
               tempPath,
               this.filename,
               (err: Error) => {
-                if (!_.isNil(err)) {
+                if (err) {
                   reject(err);
                 } else {
                   resolve();
@@ -85,13 +85,12 @@ export class CvsFileResponse<I extends Row, O extends Row> extends Response {
   }
 }
 
-export class JsonFileResponse extends Response 
-{ 
+export class JsonFileResponse extends Response {
   constructor(protected data: any, protected filename: string) {
     super(null);
   }
 
-  public async execute(_req: express.Request, res: express.Response): Promise<ResponseFunction> {
+  public async execute(_req: express.Request, res: express.Response): Promise<void> {
 
     const tempPath = tempfile('.json');
     const file = await fs.promises.open(tempPath, "w");
@@ -103,11 +102,13 @@ export class JsonFileResponse extends Response
         tempPath,
         this.filename,
         (err: Error) => {
-          if (!_.isNil(err)) {
+          if (err) {
             reject(err);
           } else {
             resolve();
           }
+
+          fs.unlink(tempPath, null);
         },
       );
     });
