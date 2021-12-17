@@ -10,7 +10,7 @@ export class FromHeaderArg extends RouteArgs {
     }
 
     public async extract(callData: IRouteCall, param: IRouteParameter, req: express.Request) {
-        let result = req.headers[param.Name];
+        let result = param.Options && param.Options.key ? req.headers[param.Options.key] : req.headers[param.Name];
         
         const [hydrated, hValue] = await this.tryHydrate(result, param);
         if (hydrated) {

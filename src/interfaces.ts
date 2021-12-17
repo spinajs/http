@@ -173,6 +173,14 @@ export enum RouteType {
   UNKNOWN = 'unknown',
 }
 
+export enum UuidVersion {
+  v1,
+  v3,
+  v4,
+  v5
+
+}
+
 /**
  * Avaible route parameters type
  */
@@ -211,12 +219,12 @@ export enum ParameterType {
   /**
    * From cvs file
    */
-   FromCSV,
+  FromCSV,
 
-   /**
-    * From JSON file
-    */
-   FromJSONFile,
+  /**
+   * From JSON file
+   */
+  FromJSONFile,
 
   /**
    * From form field

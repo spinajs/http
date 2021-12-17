@@ -10,7 +10,7 @@ export interface IRouteArgsResult {
 
 export interface IRouteArgs 
 { 
-    get SupportedType(): ParameterType | string;
+    SupportedType: ParameterType | string;
 
     extract(callData: IRouteCall, routeParameter: IRouteParameter, req: express.Request, res: express.Response, route?: IRoute): Promise<IRouteArgsResult>;
 }

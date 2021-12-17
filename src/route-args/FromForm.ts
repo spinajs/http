@@ -253,7 +253,7 @@ export class FromForm extends FromFormBase {
                     Form: this.Data
                 }
             },
-            Args: 
+            Args: result
         }
     }
 }

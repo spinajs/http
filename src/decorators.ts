@@ -7,6 +7,7 @@ import {
   BaseMiddleware,
   IRoute,
   IUploadOptions,
+  UuidVersion,
 } from './interfaces';
 import { ArgHydrator } from './route-args/ArgHydrator';
 
@@ -193,8 +194,16 @@ export function FromModel(schema?: any) {
   return Route(Parameter(ParameterType.FromModel, schema));
 }
 
-export function FromHeader(schema?: any) {
-  return Route(Parameter(ParameterType.FromHeader, schema));
+/**
+ * Gets parameter from request header. If not keyname is provided
+ * variable name is used as header key name
+ * 
+ * @param keyName header key name ( optional )
+ * @param schema schema for validation ( optional )
+ * @returns 
+ */
+export function Header(keyName?: string, schema?: any) {
+  return Route(Parameter(ParameterType.FromHeader, schema, { key: keyName }));
 }
 
 /**
@@ -214,7 +223,7 @@ export function File(options?: IUploadOptions) {
  * @param cvsParseOptions 
  * @param schema 
  */
-export function CsvFile(options: IUploadOptions, cvsParseOptions?: any, schema?: any) {
+export function CsvFile(options?: IUploadOptions, cvsParseOptions?: any, schema?: any) {
   return Route(Parameter(ParameterType.FromCSV, schema, {
     uploadOptions: options,
     cvsOptions: cvsParseOptions
@@ -228,7 +237,7 @@ export function CsvFile(options: IUploadOptions, cvsParseOptions?: any, schema?:
  * @param cvsParseOptions 
  * @param schema 
  */
-export function JsonFile(options: IUploadOptions, schema?: any) {
+export function JsonFile(options?: IUploadOptions, schema?: any) {
   return Route(Parameter(ParameterType.FromJSONFile, schema, options));
 }
 
@@ -257,8 +266,8 @@ export function FormField(schema?: any) {
  * Shortcut for parameter as autoincrement primary key ( number greater than 0)
  *
  */
-export function IncPkey() {
-  return Route(Parameter(ParameterType.FromParams, { type: 'number', minimum: 0 }));
+export function PKey(type?: ParameterType,) {
+  return Route(Parameter(type ? type : ParameterType.FromParams, { type: 'number', minimum: 0 }));
 }
 
 /**
@@ -266,8 +275,10 @@ export function IncPkey() {
  * Shortcut for parameter as uuid primary key ( string with 32 length )
  *
  */
-export function UuidPkey() {
-  return Route(Parameter(ParameterType.FromParams, { type: 'string', minLength: 32, maxLength: 32 }));
+export function Uuid(type?: ParameterType, version?: UuidVersion) {
+  return Route(Parameter(type ? type : ParameterType.FromParams, { type: 'string', minLength: 32, maxLength: 32 }, {
+    version: version ?? UuidVersion.v4
+  }));
 }
 
 /**
@@ -300,7 +311,7 @@ export function Model(model: Constructor<any>) {
 
 /**
  *
- * Parameter taken from model
+ * Parameter taken from coockie
  *
  * @param options upload options
  */
