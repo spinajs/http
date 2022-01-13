@@ -12,10 +12,6 @@ import {
 import { ArgHydrator } from './route-args/ArgHydrator';
 
 export const CONTROLLED_DESCRIPTOR_SYMBOL = Symbol('CONTROLLER_SYMBOL');
-export const SCHEMA_SYMBOL = Symbol('SCHEMA_SYMBOL');
-
-
-
 
 function Controller(
   callback: (
@@ -108,7 +104,7 @@ function Parameter(type: ParameterType, schema?: any, options?: any) {
  * @param hydrator hydrator class that will fill up incoming argument
  * @param options 
  */
-export function ArgumentHydrator(hydrator: Constructor<ArgHydrator>, ...options: any[]) {
+export function Hydrator(hydrator: Constructor<ArgHydrator>, ...options: any[]) {
   return (target: any) => {
     if (!Reflect.getMetadata("custom:arg_hydrator", target)) {
       Reflect.defineMetadata("custom:arg_hydrator", {
@@ -391,18 +387,4 @@ export function Post(path?: string) {
     route.InternalType = RouteType.POST;
     route.Path = path;
   });
-}
-
-/**
- *
- * Add schema for object eg. model or dto. If schema is not provided,
- * It tries to build one based on reflected metadata from 
- * object
- *
- * @param schema schema for object
- */
-export function Schema(schema?: any) {
-  return (target: any) => {
-    Reflect.defineMetadata(SCHEMA_SYMBOL, schema, target);
-  };
 }

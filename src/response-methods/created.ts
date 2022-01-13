@@ -1,6 +1,6 @@
 import * as express from 'express';
 import { HTTP_STATUS_CODE } from '../interfaces';
-import { httpResponse, Response, ResponseFunction } from '../responses';
+import { httpResponse, Response } from '../responses';
 
 /**
  * Internall response function.
@@ -12,7 +12,7 @@ export class Created extends Response {
     super(data);
   }
 
-  public async execute(_req: express.Request, _res: express.Response): Promise<ResponseFunction> {
-    return httpResponse(this.responseData, HTTP_STATUS_CODE.CREATED, 'responses/created');
+  public async execute(_req: express.Request, _res: express.Response) {
+    await httpResponse(this.responseData, HTTP_STATUS_CODE.CREATED, 'responses/created');
   }
 }

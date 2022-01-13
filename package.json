@@ -39,8 +39,7 @@
   "dependencies": {
     "@spinajs/di": "^1.1.0",
     "@spinajs/intl": "^1.0.1",
-    "ajv": "^6.12.2",
-    "ajv-merge-patch": "^4.1.0",
+    "@spinajs/validation": "^1.0.0",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.5",
     "cookie-signature": "^1.1.0",

@@ -13,7 +13,7 @@ export class Conflict extends Response {
     super(data);
   }
 
-  public async execute(_req: express.Request, _res: express.Response): Promise<ResponseFunction> {
-    return httpResponse(this.responseData, HTTP_STATUS_CODE.CONFLICT, 'responses/conflict');
+  public async execute(_req: express.Request, _res: express.Response) {
+    await httpResponse(this.responseData, HTTP_STATUS_CODE.CONFLICT, 'responses/conflict');
   }
 }

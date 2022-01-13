@@ -1,4 +1,4 @@
-import { Schema } from '../decorators';
+import { Schema } from '@spinajs/validation';
 
 export const OrderDtoSchema = {
   $schema: 'http://json-schema.org/draft-07/schema#',

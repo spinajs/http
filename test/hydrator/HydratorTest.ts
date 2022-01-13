@@ -1,4 +1,4 @@
-import { ArgHydrator, ArgumentHydrator } from "../../src";
+import { ArgHydrator, Hydrator } from "../../src";
 
 export class CustomArgHydrator extends ArgHydrator {
     public async hydrate(input: any): Promise<any> {
@@ -8,7 +8,7 @@ export class CustomArgHydrator extends ArgHydrator {
     }
 }
 
-@ArgumentHydrator(CustomArgHydrator)
+@Hydrator(CustomArgHydrator)
 export class TestHydrator {
     public Id: string;
 }

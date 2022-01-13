@@ -2,7 +2,7 @@ import { BaseController, Get, Ok, Policy } from "../../src";
 import { SamplePolicy2 } from '../policies/SamplePolicy2';
 
 
-export class TestPolicy2 extends BaseController {
+export class TestPolicyPath extends BaseController {
 
     @Get()
     @Policy(SamplePolicy2)

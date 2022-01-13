@@ -15,7 +15,7 @@ export class CookieResponse extends Response {
     super(value);
   }
 
-  public async execute(_req: express.Request, res: express.Response): Promise<ResponseFunction> {
+  public async execute(_req: express.Request, res: express.Response) {
     const cfg: Configuration = DI.resolve(Configuration);
     const cookieOpt = this.cookieLifetime ? { maxAge: this.cookieLifetime } : cfg.get<CookieOptions>('http.cookie.options');
 
@@ -28,6 +28,6 @@ export class CookieResponse extends Response {
       res.cookie(this.name, signed, cookieOpt as any);
     }
 
-    return httpResponse(this.data, HTTP_STATUS_CODE.OK, 'responses/ok');
+    await httpResponse(this.data, HTTP_STATUS_CODE.OK, 'responses/ok');
   }
 }

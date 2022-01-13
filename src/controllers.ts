@@ -2,13 +2,13 @@ import { ROUTE_ARG_SCHEMA } from './schemas/RouteArgsSchemas';
 import { IController, IControllerDescriptor, IPolicyDescriptor, BaseMiddleware, ParameterType, IRoute, IMiddlewareDescriptor, BasePolicy, } from './interfaces';
 import { AsyncModule, IContainer, Autoinject, DI } from '@spinajs/di';
 import * as express from 'express';
-import { CONTROLLED_DESCRIPTOR_SYMBOL, SCHEMA_SYMBOL } from './decorators';
+import { CONTROLLED_DESCRIPTOR_SYMBOL } from './decorators';
 import { ValidationFailed, UnexpectedServerError } from '@spinajs/exceptions';
 import { ClassInfo, TypescriptCompiler, ResolveFromFiles } from '@spinajs/reflection';
 import { HttpServer } from './server';
 import { Logger, Log } from '@spinajs/log';
-import { DataValidator } from './schemas';
 import { RouteArgs } from './route-args/RouteArgs';
+import { DataValidator } from '@spinajs/validation';
 
 export abstract class BaseController extends AsyncModule implements IController {
   /**
@@ -18,7 +18,10 @@ export abstract class BaseController extends AsyncModule implements IController 
 
   protected _router: express.Router;
 
-  protected Container: IContainer;
+  protected _container: IContainer;
+
+  @Autoinject()
+  protected _validator : DataValidator;
 
   @Autoinject(RouteArgs)
   protected _routeArgsExtraction: RouteArgs[];
@@ -26,7 +29,7 @@ export abstract class BaseController extends AsyncModule implements IController 
   protected _routeArgsMap: Map<ParameterType | string, RouteArgs> = new Map();
 
   @Logger({ module: 'BaseController' })
-  protected Log: Log;
+  protected _log: Log;
 
   /**
    * Express router with middleware stack
@@ -54,7 +57,7 @@ export abstract class BaseController extends AsyncModule implements IController 
   public async resolveAsync(container: IContainer) {
     const self = this;
 
-    this.Container = container;
+    this._container = container;
     this._router = express.Router();
 
     for (const [, route] of this.Descriptor.Routes) {
@@ -73,17 +76,17 @@ export abstract class BaseController extends AsyncModule implements IController 
 
       const middlewares = await Promise.all<BaseMiddleware>(
         this.Descriptor.Middlewares.concat(route.Middlewares || []).map((m: IMiddlewareDescriptor) => {
-          return self.Container.resolve(m.Type, m.Options);
+          return self._container.resolve(m.Type, m.Options);
         }),
       );
       const policies = await Promise.all<BasePolicy>(
         this.Descriptor.Policies.concat(route.Policies || []).map((m: IPolicyDescriptor) => {
-          return self.Container.resolve(m.Type, m.Options);
+          return self._container.resolve(m.Type, m.Options);
         }),
       );
       const enabledMiddlewares = middlewares.filter( m => m.isEnabled(route, this));
 
-      this.Log.trace(`Registering route ${route.Method}:${path}`);
+      this._log.trace(`Registering route ${route.Method}:${path}`);
 
       handlers.push(
         ...policies.filter(p => p.isEnabled(route, this)).map(p => _invokePolicyAction(p, p.execute.bind(p), route)),
@@ -145,7 +148,7 @@ export abstract class BaseController extends AsyncModule implements IController 
           .then(next)
           .catch((err: any) => {
 
-            self.Log.trace(`route ${self.constructor.name}:${route.Method} ${self.BasePath}${route.Path} error ${err}, policy: ${source.constructor.name}`);
+            self._log.trace(`route ${self.constructor.name}:${route.Method} ${self.BasePath}${route.Path} error ${err}, policy: ${source.constructor.name}`);
 
             next(err);
           });
@@ -173,33 +176,8 @@ export abstract class BaseController extends AsyncModule implements IController 
         }
 
         const { CallData, Args } = await extractor.extract(callData, param, req, res, route);
+        self._validator.validate(Args);
         args[param.Index] = Args;
-        callData = CallData;
-
-        const dtoSchema = Reflect.getMetadata(SCHEMA_SYMBOL, param.RuntimeType);
-        let schema = dtoSchema ?? param.Schema;
-
-        // try gues schema if one of basic type
-        if (!schema) {
-          schema = (ROUTE_ARG_SCHEMA as any)[param.RuntimeType.name];
-        }
-
-        if (schema) {
-          const validator = await self.Container.resolve<DataValidator>(DataValidator);
-          if (!validator) {
-            throw new UnexpectedServerError('validation service is not avaible');
-          }
-
-          const result = validator.validate(schema, args[param.Index]);
-          if (!result.valid) {
-            if (schema.required || schema.required === undefined) {
-              throw new ValidationFailed(`parameter validation error ${param.Name}`, {
-                param: param.Name,
-                errors: result.errors,
-              });
-            }
-          }
-        }
       }
 
       return args;

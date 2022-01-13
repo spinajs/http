@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { Response, ResponseFunction } from '../responses';
+import { Response } from '../responses';
 
 /**
  * Redirects to another route ( simple alias for request.redirect for api consistency)
@@ -15,9 +15,7 @@ export class Redirect extends Response {
     this.url = url;
   }
 
-  public async execute(_req: express.Request, _res: express.Response): Promise<ResponseFunction> {
-    return (_req: express.Request, res: express.Response) => {
-      res.redirect(this.url);
-    };
+  public async execute(_req: express.Request, res: express.Response) {
+    res.redirect(this.url);
   }
 }
